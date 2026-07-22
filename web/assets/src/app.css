@@ -11,7 +11,7 @@
     --theme-primary-soft: color-mix(in srgb, var(--theme-primary) 10%, white);
     --theme-primary-border: color-mix(in srgb, var(--theme-primary) 28%, white);
     --theme-primary-muted: color-mix(in srgb, var(--theme-primary) 76%, #64748b);
-    --public-layout-max: 80rem;
+    --public-layout-max: 100rem;
     --admin-layout-max: 86rem;
   }
 }
@@ -73,7 +73,7 @@
   }
 
   .public-appbar__inner {
-    @apply mx-auto flex min-h-16 w-full items-center justify-between gap-4 px-5 lg:px-8;
+    @apply mx-auto flex min-h-16 w-full items-center justify-between gap-4 px-5 lg:px-8 2xl:px-10;
     max-width: var(--public-layout-max);
   }
 
@@ -110,16 +110,22 @@
   }
 
   .public-hero {
-    @apply grid min-h-[calc(100svh-4rem)] place-items-center border-b border-slate-200 bg-slate-50 px-0 py-10 md:py-12 lg:py-14;
+    @apply grid min-h-[calc(100svh-4rem)] place-items-center border-b border-slate-200 bg-slate-50 px-0 py-10 md:py-12 lg:py-14 2xl:py-16;
   }
 
   .public-hero__content {
-    @apply mx-auto grid w-full gap-10 px-5 md:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)] lg:items-center;
+    @apply mx-auto grid w-full gap-10 px-5 md:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] lg:items-center 2xl:px-10;
     max-width: var(--public-layout-max);
   }
 
+  @media (min-width: 1280px) {
+    .public-hero__content {
+      column-gap: clamp(4rem, 9vw, 12rem);
+    }
+  }
+
   .public-hero__copy {
-    @apply text-left;
+    @apply max-w-4xl text-left;
   }
 
   .public-hero .landing__eyebrow {
@@ -127,7 +133,7 @@
   }
 
   .public-hero h1 {
-    @apply max-w-3xl text-balance text-4xl font-semibold leading-none tracking-normal text-slate-950 md:text-5xl xl:text-6xl;
+    @apply max-w-4xl text-balance text-4xl font-semibold leading-none tracking-normal text-slate-950 md:text-5xl xl:text-6xl 2xl:text-7xl;
   }
 
   .public-hero .landing__tagline {
@@ -135,7 +141,7 @@
   }
 
   .public-hero .landing__description {
-    @apply mt-6 max-w-2xl text-base leading-8 text-slate-600 md:text-lg;
+    @apply mt-6 max-w-3xl text-base leading-8 text-slate-600 md:text-lg;
   }
 
   .hero-logo {
@@ -285,7 +291,7 @@
   }
 
   .public-footer__inner {
-    @apply mx-auto grid w-full gap-10 px-5 md:grid-cols-[minmax(0,1.4fr)_minmax(12rem,auto)_minmax(14rem,auto)] md:items-start lg:px-8;
+    @apply mx-auto grid w-full gap-10 px-5 md:grid-cols-[minmax(0,1.4fr)_minmax(12rem,auto)_minmax(14rem,auto)] md:items-start lg:px-8 2xl:px-10;
     max-width: var(--public-layout-max);
   }
 
