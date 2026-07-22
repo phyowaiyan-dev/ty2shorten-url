@@ -1,0 +1,25 @@
+name: Documentation issue
+description: Report inaccurate or missing documentation.
+title: "docs: "
+labels: ["documentation"]
+body:
+  - type: input
+    id: document
+    attributes:
+      label: Document or section
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: Suggested correction
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

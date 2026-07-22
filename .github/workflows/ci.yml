@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install SQLite build dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc sqlite3 libsqlite3-dev
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build CSS
+        run: make css
+
+      - name: Verify compiled assets are current
+        run: git diff --exit-code -- web/static/css/app.css
+
+      - name: Verify formatting
+        run: test -z "$(gofmt -l .)"
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Run race tests
+        run: go test -race ./...
+
+      - name: Install Staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run Staticcheck
+        run: staticcheck ./...
+
+      - name: Write coverage
+        run: go test -coverprofile=coverage.out ./...
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+
+      - name: Build Linux AMD64 binary
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          mkdir -p dist
+          VERSION="${GITHUB_REF_NAME}-${GITHUB_SHA::12}"
+          BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then VERSION="${GITHUB_REF_NAME}"; fi
+          go build -trimpath -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${GITHUB_SHA} -X main.buildTime=${BUILD_TIME}" -o dist/ty2shorten-linux-amd64 ./cmd/server
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ty2shorten-linux-amd64
+          path: dist/ty2shorten-linux-amd64
+
+  mysql-integration:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: ty2shorten_test
+          MYSQL_USER: ty2shorten
+          MYSQL_PASSWORD: ty2shorten_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -prootpass"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      CGO_ENABLED: "1"
+      TY2_MYSQL_INTEGRATION: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install SQLite build dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc sqlite3 libsqlite3-dev
+
+      - name: Run optional MySQL integration tests
+        run: go test -tags mysqlintegration ./...

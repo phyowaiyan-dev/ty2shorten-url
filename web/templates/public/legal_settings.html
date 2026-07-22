@@ -1,0 +1,56 @@
+{{ define "public/legal_settings.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="legal-settings-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="legal-settings-title">Legal Content</h1>
+    </div>
+  </div>
+  {{ if .Saved }}<p class="notice">Legal content saved.</p>{{ end }}
+
+  <form class="legal-editor-grid" method="post" action="/admin/settings/legal" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+
+    <section class="legal-editor-card" aria-labelledby="privacy-editor-title">
+      <div class="legal-editor-card__header">
+        <div>
+          <span class="dashboard-section-label">/privacy</span>
+          <h2 id="privacy-editor-title">Privacy Policy</h2>
+        </div>
+        <span>Markdown</span>
+      </div>
+      <label>
+        <span>Privacy policy content</span>
+        <textarea name="privacy_policy_markdown" rows="18" spellcheck="true" placeholder="# Privacy Policy&#10;&#10;Explain what data is collected, how it is used, and how visitors can contact you.">{{ .Form.PrivacyPolicyMarkdown }}</textarea>
+        {{ with index .FieldErrors "privacy_policy_markdown" }}<small class="field-error">{{ . }}</small>{{ else }}<small>Shown on the public Privacy page.</small>{{ end }}
+      </label>
+    </section>
+
+    <section class="legal-editor-card" aria-labelledby="terms-editor-title">
+      <div class="legal-editor-card__header">
+        <div>
+          <span class="dashboard-section-label">/terms</span>
+          <h2 id="terms-editor-title">Terms of Use</h2>
+        </div>
+        <span>Markdown</span>
+      </div>
+      <label>
+        <span>Terms of use content</span>
+        <textarea name="terms_markdown" rows="18" spellcheck="true" placeholder="# Terms of Use&#10;&#10;Describe the allowed use, responsibilities, limitations, and support policy for this service.">{{ .Form.TermsMarkdown }}</textarea>
+        {{ with index .FieldErrors "terms_markdown" }}<small class="field-error">{{ . }}</small>{{ else }}<small>Shown on the public Terms page.</small>{{ end }}
+      </label>
+    </section>
+
+    <aside class="legal-editor-help">
+      <strong>Markdown supported</strong>
+      <span>Use headings with #, ##, ###, bullet lists with -, paragraphs, and Markdown links.</span>
+    </aside>
+
+    <div class="form-actions"><button class="primary-button" type="submit">Save legal content</button></div>
+  </form>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

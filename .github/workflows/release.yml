@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux-amd64:
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: "1"
+      GOOS: linux
+      GOARCH: amd64
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install SQLite build dependencies
+        run: sudo apt-get update && sudo apt-get install -y gcc sqlite3 libsqlite3-dev
+
+      - name: Build archive
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          mkdir -p dist/package
+          go build -trimpath -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${GITHUB_SHA} -X main.buildTime=${BUILD_TIME}" -o dist/package/ty2shorten ./cmd/server
+          cp README.md LICENSE CHANGELOG.md dist/package/
+          tar -C dist/package -czf dist/ty2shorten-${VERSION}-linux-amd64.tar.gz .
+          shasum -a 256 dist/ty2shorten-${VERSION}-linux-amd64.tar.gz > dist/checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/ty2shorten-${{ github.ref_name }}-linux-amd64.tar.gz
+            dist/checksums.txt
+          generate_release_notes: true
+
+# The current SQLite driver requires CGO. Linux ARM64 and macOS ARM64 release
+# artifacts should be added only after native runners or a verified
+# cross-compilation toolchain are validated.

@@ -1,0 +1,97 @@
+{{ define "public/settings.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="settings-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="settings-title">Settings</h1>
+    </div>
+  </div>
+  {{ if .Saved }}<p class="notice">Settings saved.</p>{{ end }}
+
+  <form class="settings-form" method="post" action="/admin/settings" novalidate data-settings-form>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+
+    <section class="settings-card settings-card--hero" aria-labelledby="identity-settings">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Public identity</span>
+          <h2 id="identity-settings">Brand details</h2>
+        </div>
+      </div>
+      <div class="settings-card__grid">
+        <label>
+          <span>Site name</span>
+          <input name="site_name" value="{{ .Form.SiteName }}" maxlength="80" placeholder="ThaiLegalProtection" autocomplete="organization" required data-count-chars data-count-target="site-name-count">
+          <span class="input-meta"><small>Shown in the appbar, page title, and QR caption.</small><small id="site-name-count">0/80</small></span>
+          {{ with index .FieldErrors "site_name" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+
+        <label>
+          <span>Support email</span>
+          <input name="support_email" type="email" value="{{ .Form.SupportEmail }}" placeholder="support@example.com" autocomplete="email" inputmode="email">
+          <span class="input-meta"><small>Use a valid email address for visitor support.</small></span>
+          {{ with index .FieldErrors "support_email" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+
+        <label class="span-2">
+          <span>Site description</span>
+          <textarea name="site_description" rows="5" required placeholder="A concise mobile redirect page that sends visitors to the correct Android or iOS app store." data-word-count data-word-target="site-description-count" data-word-min="8" data-word-max="50">{{ .Form.SiteDescription }}</textarea>
+          <span class="input-meta"><small>Write 8 to 50 words for the public hero and SEO defaults.</small><small id="site-description-count">0/8-50 words</small></span>
+          {{ with index .FieldErrors "site_description" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card" aria-labelledby="routing-settings">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Redirect routing</span>
+          <h2 id="routing-settings">App destinations</h2>
+        </div>
+      </div>
+      <div class="settings-card__grid">
+        <label>
+          <span>Android URL</span>
+          <input name="android_url" type="url" value="{{ .Form.AndroidURL }}" placeholder="https://play.google.com/store/apps/details?id=com.example.app" required data-url-kind="google-play">
+          <span class="input-meta"><small>Must be a Google Play Store URL.</small><small data-url-status="google-play">Waiting for URL</small></span>
+          {{ with index .FieldErrors "android_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+
+        <label>
+          <span>Apple URL</span>
+          <input name="apple_url" type="url" value="{{ .Form.AppleURL }}" placeholder="https://apps.apple.com/app/example/id123456789" required data-url-kind="apple-store">
+          <span class="input-meta"><small>Must be an Apple App Store URL.</small><small data-url-status="apple-store">Waiting for URL</small></span>
+          {{ with index .FieldErrors "apple_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+
+        <label>
+          <span>Default URL</span>
+          <input name="default_url" type="url" value="{{ .Form.DefaultURL }}" placeholder="https://app.example.com" autocomplete="url">
+          <span class="input-meta"><small>Fallback destination for desktop and unknown devices.</small></span>
+          {{ with index .FieldErrors "default_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+
+        <label>
+          <span>Public base URL</span>
+          <input name="public_base_url" type="url" value="{{ .Form.PublicBaseURL }}" placeholder="https://links.example.com" autocomplete="url" required>
+          <span class="input-meta"><small>Public domain used for QR codes and shared links.</small></span>
+          {{ with index .FieldErrors "public_base_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+      </div>
+    </section>
+
+    <div class="settings-actions">
+      <div>
+        <strong>Ready to publish?</strong>
+        <span>These values control the public landing page, QR code, and device redirects.</span>
+      </div>
+      <button class="primary-button" type="submit">Save settings</button>
+    </div>
+  </form>
+</section>
+{{ template "admin/shell-end" . }}
+<script src="/static/js/settings-form.js" defer></script>
+{{ template "public/page-end" . }}
+{{ end }}

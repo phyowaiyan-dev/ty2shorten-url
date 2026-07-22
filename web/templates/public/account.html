@@ -1,0 +1,76 @@
+{{ define "public/account.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="account-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="account-title">Account</h1>
+    </div>
+  </div>
+  {{ if eq .Saved "password" }}<p class="notice">Password changed and session refreshed.</p>{{ end }}
+  {{ if eq .Saved "profile" }}<p class="notice">Profile updated.</p>{{ end }}
+
+  <div class="account-layout">
+    <section class="account-profile" aria-label="Profile overview">
+      <div class="account-profile__identity">
+        <span class="account-profile__avatar" aria-hidden="true">{{ if .Account.AvatarURL }}<img src="{{ .Account.AvatarURL }}" alt="">{{ else }}{{ .Account.Initials }}{{ end }}</span>
+        <div>
+          <h2>{{ .Account.Name }}</h2>
+          <p>{{ .Account.Email }}</p>
+        </div>
+      </div>
+      <form class="account-profile-form" method="post" action="/admin/account/profile" enctype="multipart/form-data" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+        <input type="hidden" name="avatar_url" value="{{ .Account.AvatarURL }}">
+        <label><span>Name</span><input name="name" value="{{ .Account.Name }}" required>{{ with index .FieldErrors "name" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+        <label><span>Email</span><input name="email" type="email" value="{{ .Account.Email }}" required>{{ with index .FieldErrors "email" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+        <label class="span-2"><span>Profile image</span><input name="avatar_file" type="file" accept="image/png,image/jpeg,image/webp">{{ with index .FieldErrors "avatar_file" }}<small class="field-error">{{ . }}</small>{{ end }}{{ with index .FieldErrors "avatar_url" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+        <div class="form-actions"><button class="secondary-button" type="submit">Save profile</button></div>
+      </form>
+      <dl class="account-facts">
+        <div>
+          <dt>Role</dt>
+          <dd>{{ .Account.Role }}</dd>
+        </div>
+        <div>
+          <dt>Admin ID</dt>
+          <dd>#{{ .Account.ID }}</dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ .Account.CreatedAt }}</dd>
+        </div>
+        <div>
+          <dt>Last updated</dt>
+          <dd>{{ .Account.UpdatedAt }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="account-security" aria-labelledby="password-title">
+      <div class="dashboard-panel__header">
+        <div>
+          <span class="dashboard-section-label">Security</span>
+          <h2 id="password-title">Change password</h2>
+        </div>
+      </div>
+      <form class="account-password-form" method="post" action="/admin/account/password" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+        <label><span>Current password</span><span class="password-input"><input name="current_password" type="password" autocomplete="current-password" required><button type="button" data-password-toggle aria-label="Show current password"><span class="password-eye" aria-hidden="true"></span></button></span>{{ with index .FieldErrors "current_password" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+        <label><span>New password</span><span class="password-input"><input name="new_password" type="password" autocomplete="new-password" required minlength="10" data-new-password><button type="button" data-password-toggle aria-label="Show new password"><span class="password-eye" aria-hidden="true"></span></button></span>{{ with index .FieldErrors "new_password" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+        <label><span>Confirm new password</span><span class="password-input"><input name="confirm_password" type="password" autocomplete="new-password" required data-confirm-password><button type="button" data-password-toggle aria-label="Show confirm password"><span class="password-eye" aria-hidden="true"></span></button></span>{{ with index .FieldErrors "confirm_password" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+        <div class="password-rules" data-password-rules aria-live="polite">
+          <p>Password requirements</p>
+          <span data-rule="length">At least 10 characters</span>
+          <span data-rule="match">New password and confirmation match</span>
+        </div>
+        <div class="form-actions"><button class="primary-button" type="submit">Change password</button></div>
+      </form>
+    </section>
+  </div>
+</section>
+{{ template "admin/shell-end" . }}
+<script src="/static/js/account.js" defer></script>
+{{ template "public/page-end" . }}
+{{ end }}

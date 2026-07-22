@@ -1,0 +1,80 @@
+{{ define "public/setup.html" }}
+{{ template "public/page-start" . }}
+<section class="panel" aria-labelledby="setup-title">
+  <div class="panel__header">
+    <p class="landing__eyebrow">First-run setup</p>
+    <h1 id="setup-title">Create your short-link service</h1>
+    <p class="landing__description">Add the first administrator and the app-store destinations used by public redirects.</p>
+  </div>
+
+  <form class="form-grid" method="post" action="/setup" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+    <input type="hidden" name="public_base_url" value="{{ .Form.PublicBaseURL }}">
+
+    <label>
+      <span>Site name</span>
+      <input name="site_name" value="{{ .Form.SiteName }}" autocomplete="organization" required>
+      {{ with index .FieldErrors "site_name" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Site description</span>
+      <textarea name="site_description" rows="3" required>{{ .Form.SiteDescription }}</textarea>
+      {{ with index .FieldErrors "site_description" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Administrator name</span>
+      <input name="admin_name" value="{{ .Form.AdminName }}" autocomplete="name" required>
+      {{ with index .FieldErrors "admin_name" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Administrator email</span>
+      <input name="admin_email" type="email" value="{{ .Form.AdminEmail }}" autocomplete="email" required>
+      {{ with index .FieldErrors "admin_email" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Password</span>
+      <input name="admin_password" type="password" autocomplete="new-password" required>
+      {{ with index .FieldErrors "admin_password" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Confirm password</span>
+      <input name="password_confirm" type="password" autocomplete="new-password" required>
+      {{ with index .FieldErrors "password_confirm" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Android app URL</span>
+      <input name="android_url" type="url" value="{{ .Form.AndroidURL }}" required>
+      {{ with index .FieldErrors "android_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Apple app URL</span>
+      <input name="apple_url" type="url" value="{{ .Form.AppleURL }}" required>
+      {{ with index .FieldErrors "apple_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Default URL</span>
+      <input name="default_url" type="url" value="{{ .Form.DefaultURL }}">
+      {{ with index .FieldErrors "default_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <label>
+      <span>Support email</span>
+      <input name="support_email" type="email" value="{{ .Form.SupportEmail }}">
+      {{ with index .FieldErrors "support_email" }}<small class="field-error">{{ . }}</small>{{ end }}
+    </label>
+
+    <div class="form-actions">
+      <button class="primary-button" type="submit">Complete setup</button>
+    </div>
+  </form>
+</section>
+{{ template "public/page-end" . }}
+{{ end }}

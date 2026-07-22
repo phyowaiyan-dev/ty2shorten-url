@@ -1,0 +1,26 @@
+{{ define "public/audit_log_detail.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="audit-detail-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="audit-detail-title">Audit Log Detail</h1>
+    </div>
+    <a class="secondary-button button-link" href="/admin/audit-logs">Back to audit logs</a>
+  </div>
+  <dl class="detail-grid">
+    <dt>Time</dt><dd>{{ .TimeLabel }}</dd>
+    <dt>Action</dt><dd>{{ .ActionLabel }} <code>{{ .Log.Action }}</code></dd>
+    <dt>Resource</dt><dd>{{ .ResourceLabel }} {{ .Log.ResourceID }}</dd>
+    <dt>Summary</dt><dd>{{ .Log.Summary }}</dd>
+    <dt>Actor</dt><dd>{{ .Log.ActorName }} {{ .Log.ActorEmail }}</dd>
+    <dt>IP address</dt><dd>{{ .Log.IPAddress }}</dd>
+    <dt>User agent</dt><dd>{{ .Log.UserAgent }}</dd>
+    <dt>Request ID</dt><dd><code>{{ .Log.RequestID }}</code></dd>
+    <dt>Metadata</dt><dd><pre>{{ .Log.MetadataJSON }}</pre></dd>
+  </dl>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

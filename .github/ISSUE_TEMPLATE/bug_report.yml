@@ -1,0 +1,58 @@
+name: Bug report
+description: Report reproducible broken behavior.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Project version
+      description: Version, tag, or commit.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+    validations:
+      required: true
+  - type: input
+    id: go
+    attributes:
+      label: Go version
+  - type: input
+    id: deployment
+    attributes:
+      label: Deployment method
+      placeholder: Local, systemd, Apache reverse proxy, GitHub Actions artifact, etc.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs with secrets removed
+      description: Remove passwords, tokens, cookies, private URLs, and secrets.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

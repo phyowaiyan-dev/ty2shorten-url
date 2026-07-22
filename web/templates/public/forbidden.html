@@ -1,0 +1,16 @@
+{{ define "public/forbidden.html" }}
+{{ template "public/page-start" . }}
+<section class="error-page error-page--403" aria-labelledby="forbidden-title">
+  <div class="error-page__orb" aria-hidden="true"></div>
+  <p class="landing__eyebrow">403</p>
+  <h1 id="forbidden-title">{{ .Heading }}</h1>
+  <p class="landing__description">{{ .Message }}</p>
+  <div class="error-page__status" aria-live="polite">
+    <span class="error-page__pulse" aria-hidden="true"></span>
+    <span>Redirecting home in <strong data-countdown="{{ .RedirectDelay }}">{{ .RedirectDelay }}</strong>s</span>
+  </div>
+  <p><a class="primary-button button-link" href="/">Return home now</a></p>
+</section>
+<script src="/static/js/error-countdown.js" defer></script>
+{{ template "public/page-end" . }}
+{{ end }}

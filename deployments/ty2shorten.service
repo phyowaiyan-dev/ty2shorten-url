@@ -1,0 +1,26 @@
+[Unit]
+Description=ty2shorten URL shortener
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ty2shorten
+Group=ty2shorten
+WorkingDirectory=/opt/ty2shorten
+EnvironmentFile=/etc/ty2shorten/ty2shorten.env
+ExecStart=/opt/ty2shorten/ty2shorten
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/ty2shorten
+StateDirectory=ty2shorten
+StateDirectoryMode=0750
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

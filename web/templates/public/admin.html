@@ -1,0 +1,145 @@
+{{ define "public/admin.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="admin-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="admin-title">Dashboard</h1>
+    </div>
+  </div>
+
+  <div class="dashboard-overview">
+    <article class="readiness-card" aria-label="Launch readiness">
+      <div class="readiness-card__header">
+        <div>
+          <span class="dashboard-section-label">Operational snapshot</span>
+          <h2>Launch readiness</h2>
+        </div>
+        <span class="readiness-status">{{ .Dashboard.ReadinessLabel }}</span>
+      </div>
+      <div class="readiness-scoreline">
+        <strong>{{ .Dashboard.SetupScore }}%</strong>
+        <span>{{ .Dashboard.SetupCompleted }} of {{ .Dashboard.SetupTotal }} setup items complete</span>
+      </div>
+      <progress class="readiness-progress" value="{{ .Dashboard.SetupScore }}" max="100">{{ .Dashboard.SetupScore }}%</progress>
+      <div class="readiness-summary">
+        <span><strong>{{ len .Dashboard.MissingSetup }}</strong> missing setup items</span>
+        <span><strong>{{ .Dashboard.ActiveShortLinks }}</strong> active links</span>
+        <span><strong>{{ .Dashboard.AppEnv }}</strong> environment</span>
+      </div>
+      <div class="dashboard-actions">
+        <a class="dashboard-action dashboard-action--primary" href="/admin/settings">Review settings</a>
+        <a class="dashboard-action dashboard-action--secondary" href="/admin/links/new">Create short link</a>
+      </div>
+    </article>
+
+    <article class="priority-card">
+      <div class="dashboard-panel__header">
+        <div>
+          <span class="dashboard-section-label">Missing setup</span>
+          <h2>Next setup actions</h2>
+        </div>
+      </div>
+      {{ if .Dashboard.MissingSetup }}
+      <div class="priority-list">
+        {{ range .Dashboard.MissingSetup }}
+        <a href="{{ .URL }}">
+          <span>{{ .Label }}</span>
+          <small>{{ .Description }}</small>
+        </a>
+        {{ end }}
+      </div>
+      {{ else }}
+      <div class="missing-empty">
+        <strong>Everything important is configured.</strong>
+        <span>Review settings regularly as your public app experience changes.</span>
+      </div>
+      {{ end }}
+    </article>
+  </div>
+
+  <div class="dashboard-metrics" aria-label="Service status">
+    <article class="dashboard-stat dashboard-stat--android">
+      <div>
+        <span>Android destination</span>
+        <strong>{{ if .Dashboard.AndroidConfigured }}Configured{{ else }}Missing{{ end }}</strong>
+      </div>
+      <small>{{ if .Dashboard.AndroidConfigured }}Ready for Android redirects{{ else }}Add Google Play URL{{ end }}</small>
+    </article>
+    <article class="dashboard-stat dashboard-stat--apple">
+      <div>
+        <span>iOS destination</span>
+        <strong>{{ if .Dashboard.AppleConfigured }}Configured{{ else }}Missing{{ end }}</strong>
+      </div>
+      <small>{{ if .Dashboard.AppleConfigured }}Ready for iOS redirects{{ else }}Add App Store URL{{ end }}</small>
+    </article>
+    <article class="dashboard-stat">
+      <div>
+        <span>Short links</span>
+        <strong>{{ .Dashboard.ActiveShortLinks }}</strong>
+      </div>
+      <small>Live campaign destinations</small>
+    </article>
+    <article class="dashboard-stat">
+      <div>
+        <span>Redirect clicks</span>
+        <strong>{{ .Dashboard.TotalClicks }}</strong>
+      </div>
+      <small>Tracked redirects to date</small>
+    </article>
+    <article class="dashboard-stat">
+      <div>
+        <span>Runtime</span>
+        <strong>{{ .Dashboard.AppEnv }}</strong>
+      </div>
+      <small>Current runtime mode</small>
+    </article>
+  </div>
+
+  <div class="dashboard-grid">
+    <article class="dashboard-panel dashboard-panel--wide">
+      <div class="dashboard-panel__header">
+        <div>
+          <span class="dashboard-section-label">Traffic overview</span>
+          <h2>Redirect activity</h2>
+        </div>
+        <span class="dashboard-panel__badge">Current totals</span>
+      </div>
+      <div class="dashboard-bars" aria-label="Redirect activity chart">
+        {{ range .Dashboard.ChartBars }}
+        <div class="dashboard-bar-row">
+          <div class="dashboard-bar-row__meta">
+            <span>{{ .Label }}</span>
+            <strong>{{ .Value }}</strong>
+          </div>
+          <progress class="dashboard-meter" value="{{ .WidthPercent }}" max="100">{{ .WidthPercent }}%</progress>
+        </div>
+        {{ end }}
+      </div>
+    </article>
+
+    <article class="dashboard-panel setup-panel">
+      <div class="dashboard-panel__header">
+        <div>
+          <span class="dashboard-section-label">Setup score</span>
+          <h2>Production checklist</h2>
+        </div>
+      </div>
+      <div class="setup-task-list">
+        {{ range .Dashboard.SetupTasks }}
+        <a href="{{ .URL }}" class="setup-task {{ if .Complete }}is-complete{{ end }}">
+          <span aria-hidden="true">{{ if .Complete }}Done{{ else }}Open{{ end }}</span>
+          <div>
+            <strong>{{ .Label }}</strong>
+            <small>{{ .Description }}</small>
+          </div>
+        </a>
+        {{ end }}
+      </div>
+    </article>
+  </div>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

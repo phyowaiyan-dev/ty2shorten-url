@@ -1,0 +1,47 @@
+{{ define "public/links.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="links-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="links-title">Short links</h1>
+    </div>
+    <a class="primary-button button-link" href="/admin/links/new">New link</a>
+  </div>
+  {{ if .Saved }}<p class="notice">Link saved.</p>{{ end }}
+  {{ if .Deleted }}<p class="notice">Link deleted.</p>{{ end }}
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Title</th><th>Slug</th><th>Status</th><th>Clicks</th><th>Public URL</th><th>Actions</th></tr></thead>
+      <tbody>
+      {{ range .Links }}
+        <tr>
+          <td>{{ .Title }}</td>
+          <td><code>{{ .Slug }}</code></td>
+          <td>{{ if .IsActive }}Active{{ else }}Disabled{{ end }}</td>
+          <td>{{ .ClickCount }}</td>
+          <td><input class="copy-field" readonly value="{{ .PublicURL }}" aria-label="Public URL for {{ .Slug }}"></td>
+          <td class="actions-cell">
+            <a class="text-link" href="/admin/links/{{ .ID }}/edit">Edit</a>
+            <details class="delete-confirm">
+              <summary>Delete</summary>
+              <form method="post" action="/admin/links/{{ .ID }}/delete">
+                <input type="hidden" name="csrf_token" value="{{ $.CSRFToken }}">
+                <p>Disable frequently used links instead when possible.</p>
+                <button class="danger-button" type="submit">Confirm delete</button>
+              </form>
+            </details>
+          </td>
+        </tr>
+      {{ else }}
+        <tr><td colspan="6">No short links yet.</td></tr>
+      {{ end }}
+      </tbody>
+    </table>
+  </div>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

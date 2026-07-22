@@ -1,0 +1,55 @@
+root = "."
+tmp_dir = "tmp/air"
+
+[build]
+cmd = "go build -o ./tmp/air/ty2shorten-url ./cmd/server"
+entrypoint = ["./tmp/air/ty2shorten-url"]
+delay = 1000
+stop_on_error = true
+send_interrupt = true
+kill_delay = "500ms"
+exclude_unchanged = true
+follow_symlink = false
+include_dir = [
+  "cmd",
+  "internal",
+  "web/templates",
+  "web/static"
+]
+include_ext = [
+  "go",
+  "html",
+  "tmpl",
+  "tpl",
+  "css",
+  "js",
+  "json"
+]
+exclude_dir = [
+  "tmp",
+  "bin",
+  "dist",
+  "storage",
+  "uploads",
+  "vendor",
+  "node_modules",
+  ".git",
+  ".idea",
+  ".vscode",
+  "coverage",
+  "web/assets"
+]
+exclude_regex = [
+  "_test.go",
+  ".*\\.db$",
+  ".*\\.db-shm$",
+  ".*\\.db-wal$",
+  ".*\\.log$",
+  ".*\\.tmp$"
+]
+
+[log]
+time = true
+
+[misc]
+clean_on_exit = true

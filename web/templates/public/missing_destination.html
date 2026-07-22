@@ -1,0 +1,10 @@
+{{ define "public/missing_destination.html" }}
+{{ template "public/page-start" . }}
+<section class="message-page" aria-labelledby="message-title">
+  <p class="landing__eyebrow">Redirect unavailable</p>
+  <h1 id="message-title">{{ .Heading }}</h1>
+  <p class="landing__description">{{ .Message }}</p>
+  <p><a class="text-link" href="/">Return home</a></p>
+</section>
+{{ template "public/page-end" . }}
+{{ end }}

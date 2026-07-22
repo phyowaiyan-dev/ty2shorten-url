@@ -1,0 +1,27 @@
+{{ define "public/about.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="about-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="about-title">About Project</h1>
+    </div>
+  </div>
+
+  <article class="about-card" aria-label="Read-only project information">
+    <div class="about-card__header">
+      <div>
+        <span class="dashboard-section-label">Read only</span>
+        <h2>Project information</h2>
+      </div>
+      <span>Protected project notice</span>
+    </div>
+    <div class="about-markdown">
+      {{ .About.HTML }}
+    </div>
+  </article>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

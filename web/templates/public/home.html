@@ -1,0 +1,78 @@
+{{ define "public/home.html" }}
+{{ template "public/page-start" . }}
+<div class="public-site">
+  <section class="public-hero" aria-labelledby="landing-title">
+    <div class="public-hero__content">
+      <div class="public-hero__copy">
+        {{ if .LogoURL }}<img class="hero-logo" src="{{ .LogoURL }}" alt="{{ .SiteName }} logo">{{ end }}
+        <p class="landing__eyebrow">Mobile redirect service</p>
+        <h1 id="landing-title">{{ .SiteName }}</h1>
+        {{ with .SiteTagline }}<p class="landing__tagline">{{ . }}</p>{{ end }}
+        <p class="landing__description">{{ .SiteDescription }}</p>
+        <div class="store-actions" aria-label="App download links">
+          {{ if .AndroidURL }}
+          <a class="store-button store-button--android" href="/android">
+            <span class="store-button__label">Android</span>
+            <span class="store-button__meta">Google Play</span>
+          </a>
+          {{ end }}
+          {{ if .AppleURL }}
+          <a class="store-button store-button--apple" href="/apple">
+            <span class="store-button__label">Apple</span>
+            <span class="store-button__meta">App Store</span>
+          </a>
+          {{ end }}
+          <a class="store-button store-button--get" href="/get">
+            <span class="store-button__label">Auto-detect</span>
+            <span class="store-button__meta">Open the right store</span>
+          </a>
+        </div>
+      </div>
+
+      {{ if .QRCode }}
+      <figure class="hero-qr-panel">
+        <div class="hero-qr-panel__frame">
+          <img class="qr-code" src="{{ .QRCode }}" alt="QR code for app download page">
+        </div>
+        <figcaption>
+          <span>Scan to open</span>
+          <strong>{{ .SiteName }}</strong>
+        </figcaption>
+      </figure>
+      {{ end }}
+    </div>
+  </section>
+
+  {{ if .Footer.Enabled }}
+  <footer class="public-footer" aria-label="Site footer">
+    <div class="public-footer__inner">
+      <div class="public-footer__brand">
+        <strong>{{ .Footer.BrandText }}</strong>
+        {{ with .Footer.Description }}<p>{{ . }}</p>{{ end }}
+        {{ with .Footer.Address }}<p>{{ . }}</p>{{ end }}
+      </div>
+
+      <div class="public-footer__column">
+        <h2>Company</h2>
+        <nav aria-label="Footer navigation">
+          <a class="text-link" href="{{ .Footer.PrivacyURL }}">Privacy Policy</a>
+          <a class="text-link" href="{{ .Footer.TermsURL }}">Terms</a>
+        </nav>
+      </div>
+
+      <div class="public-footer__column">
+        <h2>Support</h2>
+        {{ with .Footer.SupportText }}<p>{{ . }}</p>{{ end }}
+        {{ with .Footer.SupportEmail }}<a class="text-link" href="mailto:{{ . }}">{{ . }}</a>{{ end }}
+      </div>
+
+      <div class="public-footer__bottom">
+        {{ with .Footer.Copyright }}<p>{{ . }}</p>{{ end }}
+        <p><a class="text-link" href="https://phyowaiyan.com/" rel="noopener noreferrer" target="_blank">Powered-by Phyo Wai Yan</a></p>
+      </div>
+    </div>
+  </footer>
+  {{ end }}
+</div>
+{{ template "public/page-end" . }}
+{{ end }}

@@ -1,0 +1,55 @@
+{{ define "public/page-start" }}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{ with .AutoRedirectURL }}<meta http-equiv="refresh" content="{{ $.RedirectDelay }}; url={{ . }}">{{ end }}
+  <title>{{ if .SEO.Title }}{{ .SEO.Title }}{{ else }}{{ .Title }}{{ end }}</title>
+  {{ with .SEO.Description }}<meta name="description" content="{{ . }}">{{ end }}
+  {{ with .SEO.Keywords }}<meta name="keywords" content="{{ . }}">{{ end }}
+  {{ with .SEO.Robots }}<meta name="robots" content="{{ . }}">{{ end }}
+  {{ with .SEO.CanonicalURL }}<link rel="canonical" href="{{ . }}">{{ end }}
+  {{ with .SEO.FaviconURL }}<link rel="icon" href="{{ . }}">{{ end }}
+  {{ with .SEO.AppleTouchIconURL }}<link rel="apple-touch-icon" href="{{ . }}">{{ end }}
+  {{ with .SEO.OGType }}<meta property="og:type" content="{{ . }}">{{ end }}
+  {{ with .SEO.OGTitle }}<meta property="og:title" content="{{ . }}">{{ end }}
+  {{ with .SEO.OGDescription }}<meta property="og:description" content="{{ . }}">{{ end }}
+  {{ with .SEO.OGURL }}<meta property="og:url" content="{{ . }}">{{ end }}
+  {{ with .SEO.OGSiteName }}<meta property="og:site_name" content="{{ . }}">{{ end }}
+  {{ with .SEO.OGImage }}<meta property="og:image" content="{{ . }}">{{ end }}
+  {{ with .SEO.OGLocale }}<meta property="og:locale" content="{{ . }}">{{ end }}
+  {{ with .SEO.TwitterCard }}<meta name="twitter:card" content="{{ . }}">{{ end }}
+  {{ with .SEO.TwitterTitle }}<meta name="twitter:title" content="{{ . }}">{{ end }}
+  {{ with .SEO.TwitterDescription }}<meta name="twitter:description" content="{{ . }}">{{ end }}
+  {{ with .SEO.TwitterImage }}<meta name="twitter:image" content="{{ . }}">{{ end }}
+  {{ with .SEO.TwitterSite }}<meta name="twitter:site" content="{{ . }}">{{ end }}
+  {{ with .SEO.GoogleSiteVerification }}<meta name="google-site-verification" content="{{ . }}">{{ end }}
+  {{ with .SEO.BingSiteVerification }}<meta name="msvalidate.01" content="{{ . }}">{{ end }}
+  <link rel="stylesheet" href="/static/css/app.css">
+  {{ with .SEO.StructuredData }}<script type="application/ld+json">{{ . }}</script>{{ end }}
+</head>
+<body>
+  <main class="page-shell">
+{{ with .PublicChrome }}
+  {{ if .Enabled }}
+    <header class="public-appbar">
+      <a class="public-brand" href="/" aria-label="{{ .SiteName }} home">
+        {{ if .LogoURL }}<img class="brand-logo" src="{{ .LogoURL }}" alt="{{ .SiteName }} logo">{{ else }}<span class="public-brand__mark" aria-hidden="true">{{ .Initial }}</span>{{ end }}
+        <span>{{ .SiteName }}</span>
+      </a>
+      <nav class="public-nav" aria-label="Primary navigation">
+        <a href="/get">Get the app</a>
+        <a href="{{ .PrivacyURL }}">Privacy</a>
+        <a href="{{ .TermsURL }}">Terms</a>
+      </nav>
+    </header>
+  {{ end }}
+{{ end }}
+{{ end }}
+
+{{ define "public/page-end" }}
+  </main>
+</body>
+</html>
+{{ end }}

@@ -1,0 +1,27 @@
+{{ define "public/login.html" }}
+{{ template "public/page-start" . }}
+<section class="auth-panel" aria-labelledby="login-title">
+  <div class="panel__header">
+    <p class="landing__eyebrow">Administrator</p>
+    <h1 id="login-title">Sign in</h1>
+  </div>
+
+  {{ if .Error }}<p class="alert" role="alert">{{ .Error }}</p>{{ end }}
+
+  <form class="form-grid form-grid--compact" method="post" action="/admin/login" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+    <label>
+      <span>Email</span>
+      <input name="email" type="email" value="{{ .Email }}" autocomplete="email" required>
+    </label>
+    <label>
+      <span>Password</span>
+      <input name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <div class="form-actions">
+      <button class="primary-button" type="submit">Sign in</button>
+    </div>
+  </form>
+</section>
+{{ template "public/page-end" . }}
+{{ end }}

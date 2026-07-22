@@ -1,0 +1,23 @@
+{{ define "public/link_form.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="link-form-title">
+  <div class="panel__header">
+    <p class="landing__eyebrow">Administrator</p>
+    <h1 id="link-form-title">{{ .Heading }}</h1>
+  </div>
+  <form class="form-grid" method="post" action="{{ .Action }}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+    <label><span>Title</span><input name="title" value="{{ .Form.Title }}" required>{{ with index .FieldErrors "title" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+    <label><span>Slug</span><input name="slug" value="{{ .Form.Slug }}" required>{{ with index .FieldErrors "slug" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+    <label class="span-2"><span>Destination URL</span><input name="destination" type="url" value="{{ .Form.Destination }}" required>{{ with index .FieldErrors "destination" }}<small class="field-error">{{ . }}</small>{{ end }}</label>
+    <label class="checkbox-label"><input name="is_active" type="checkbox" value="1" {{ if .Form.IsActive }}checked{{ end }}> <span>Active</span></label>
+    <div class="form-actions">
+      <button class="primary-button" type="submit">Save link</button>
+      <a class="secondary-button button-link" href="/admin/links">Cancel</a>
+    </div>
+  </form>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

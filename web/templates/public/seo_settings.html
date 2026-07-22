@@ -1,0 +1,207 @@
+{{ define "public/seo_settings.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="seo-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="seo-title">SEO Settings</h1>
+    </div>
+  </div>
+  {{ if .Saved }}<p class="notice">SEO settings saved.</p>{{ end }}
+
+  <form class="seo-form" method="post" action="/admin/settings/seo" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+    <input type="hidden" name="open_graph_default_image_url" value="{{ .Form.OpenGraphDefaultImageURL }}">
+    <input type="hidden" name="twitter_default_image_url" value="{{ .Form.TwitterDefaultImageURL }}">
+    <input type="hidden" name="organization_logo_url" value="{{ .Form.OrganizationLogoURL }}">
+
+    <section class="settings-card settings-card--hero" aria-labelledby="visibility-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Search visibility</span>
+          <h2 id="visibility-title">Crawler controls</h2>
+        </div>
+      </div>
+      <div class="seo-toggle-grid">
+        <label class="seo-toggle"><input name="seo_enabled" type="checkbox" value="1" {{ if .Form.SEOEnabled }}checked{{ end }}> <span><strong>SEO enabled</strong><small>Render metadata on public pages.</small></span></label>
+        <label class="seo-toggle"><input name="search_engine_indexing_enabled" type="checkbox" value="1" {{ if .Form.SearchEngineIndexingEnabled }}checked{{ end }}> <span><strong>Search indexing</strong><small>Allow search engines to index the public page.</small></span></label>
+        <label class="seo-toggle"><input name="robots_enabled" type="checkbox" value="1" {{ if .Form.RobotsEnabled }}checked{{ end }}> <span><strong>robots.txt</strong><small>Expose dynamic crawler rules.</small></span></label>
+        <label class="seo-toggle"><input name="sitemap_enabled" type="checkbox" value="1" {{ if .Form.SitemapEnabled }}checked{{ end }}> <span><strong>sitemap.xml</strong><small>Publish the public landing page sitemap.</small></span></label>
+      </div>
+    </section>
+
+    <section class="settings-card" aria-labelledby="metadata-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Search result preview</span>
+          <h2 id="metadata-title">Metadata</h2>
+        </div>
+      </div>
+      <div class="settings-card__grid">
+        <label>
+          <span>Meta title</span>
+          <input name="default_meta_title" value="{{ .Form.DefaultMetaTitle }}" placeholder="ThaiLegalProtection - Mobile Redirect Service">
+          <span class="input-meta"><small>Recommended length: 40 to 60 characters.</small></span>
+        </label>
+        <label>
+          <span>Robots directive</span>
+          <select name="default_robots_directive">
+            <option value="index, follow" {{ if eq .Form.DefaultRobotsDirective "index, follow" }}selected{{ end }}>index, follow</option>
+            <option value="noindex, nofollow" {{ if eq .Form.DefaultRobotsDirective "noindex, nofollow" }}selected{{ end }}>noindex, nofollow</option>
+            <option value="index, nofollow" {{ if eq .Form.DefaultRobotsDirective "index, nofollow" }}selected{{ end }}>index, nofollow</option>
+            <option value="noindex, follow" {{ if eq .Form.DefaultRobotsDirective "noindex, follow" }}selected{{ end }}>noindex, follow</option>
+          </select>
+          <span class="input-meta"><small>Default is index, follow.</small></span>
+        </label>
+        <label class="span-2">
+          <span>Meta description</span>
+          <textarea name="default_meta_description" rows="4" placeholder="Send visitors to the right mobile app store with one branded public link.">{{ .Form.DefaultMetaDescription }}</textarea>
+          <span class="input-meta"><small>Use a readable summary for search and social previews.</small></span>
+        </label>
+        <label class="span-2">
+          <span>Keywords</span>
+          <input name="default_keywords" value="{{ .Form.DefaultKeywords }}" placeholder="mobile redirect, app link, QR code, Android, iOS">
+          <span class="input-meta"><small>Separate keyword phrases with commas.</small></span>
+        </label>
+        <label>
+          <span>Canonical base URL</span>
+          <input name="canonical_base_url" type="url" value="{{ .Form.CanonicalBaseURL }}" placeholder="https://links.example.com">
+          <span class="input-meta"><small>Canonical public domain for search metadata.</small></span>
+          {{ with index .FieldErrors "canonical_base_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card" aria-labelledby="sharing-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Social sharing</span>
+          <h2 id="sharing-title">Open Graph and Twitter/X</h2>
+        </div>
+      </div>
+      <div class="settings-card__grid">
+        <label>
+          <span>Open Graph site name</span>
+          <input name="open_graph_site_name" value="{{ .Form.OpenGraphSiteName }}" placeholder="ThaiLegalProtection">
+        </label>
+        <label>
+          <span>Open Graph locale</span>
+          <input name="open_graph_locale" value="{{ .Form.OpenGraphLocale }}" placeholder="en_US">
+        </label>
+        <label>
+          <span>Twitter/X card type</span>
+          <select name="twitter_card_type">
+            <option value="summary_large_image" {{ if eq .Form.TwitterCardType "summary_large_image" }}selected{{ end }}>summary_large_image</option>
+            <option value="summary" {{ if eq .Form.TwitterCardType "summary" }}selected{{ end }}>summary</option>
+          </select>
+        </label>
+        <label>
+          <span>Twitter/X handle</span>
+          <input name="twitter_handle" value="{{ .Form.TwitterHandle }}" placeholder="@yourbrand">
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card" aria-labelledby="seo-images-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Preview images</span>
+          <h2 id="seo-images-title">Uploaded SEO images</h2>
+        </div>
+      </div>
+      <div class="brand-asset-grid">
+        <article class="brand-asset-card brand-asset-card--wide">
+          <div class="brand-asset-card__preview brand-asset-card__preview--social">
+            {{ if .Form.OpenGraphDefaultImageURL }}<img src="{{ .Form.OpenGraphDefaultImageURL }}" alt="Current Open Graph image">{{ else }}<span>No Open Graph image</span>{{ end }}
+          </div>
+          <div class="brand-asset-card__body">
+            <strong>Open Graph image</strong>
+            <span>Used when the public page is shared on social platforms.</span>
+            {{ with .Form.OpenGraphDefaultImageURL }}<code>{{ . }}</code>{{ end }}
+            <label class="brand-upload-action">
+              <span>{{ if .Form.OpenGraphDefaultImageURL }}Reupload Open Graph image{{ else }}Upload Open Graph image{{ end }}</span>
+              <input name="open_graph_default_image_file" type="file" accept="image/png,image/jpeg,image/webp">
+            </label>
+            {{ with index .FieldErrors "open_graph_default_image_file" }}<small class="field-error">{{ . }}</small>{{ end }}
+            {{ with index .FieldErrors "open_graph_default_image_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+          </div>
+        </article>
+
+        <article class="brand-asset-card brand-asset-card--wide">
+          <div class="brand-asset-card__preview brand-asset-card__preview--social">
+            {{ if .Form.TwitterDefaultImageURL }}<img src="{{ .Form.TwitterDefaultImageURL }}" alt="Current Twitter/X image">{{ else }}<span>No Twitter/X image</span>{{ end }}
+          </div>
+          <div class="brand-asset-card__body">
+            <strong>Twitter/X image</strong>
+            <span>Optional image override for Twitter/X cards.</span>
+            {{ with .Form.TwitterDefaultImageURL }}<code>{{ . }}</code>{{ end }}
+            <label class="brand-upload-action">
+              <span>{{ if .Form.TwitterDefaultImageURL }}Reupload Twitter/X image{{ else }}Upload Twitter/X image{{ end }}</span>
+              <input name="twitter_default_image_file" type="file" accept="image/png,image/jpeg,image/webp">
+            </label>
+            {{ with index .FieldErrors "twitter_default_image_file" }}<small class="field-error">{{ . }}</small>{{ end }}
+            {{ with index .FieldErrors "twitter_default_image_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+          </div>
+        </article>
+
+        <article class="brand-asset-card brand-asset-card--wide">
+          <div class="brand-asset-card__preview brand-asset-card__preview--light">
+            {{ if .Form.OrganizationLogoURL }}<img src="{{ .Form.OrganizationLogoURL }}" alt="Current organization logo">{{ else }}<span>No organization logo</span>{{ end }}
+          </div>
+          <div class="brand-asset-card__body">
+            <strong>Organization logo</strong>
+            <span>Logo used in structured data for search engines.</span>
+            {{ with .Form.OrganizationLogoURL }}<code>{{ . }}</code>{{ end }}
+            <label class="brand-upload-action">
+              <span>{{ if .Form.OrganizationLogoURL }}Reupload organization logo{{ else }}Upload organization logo{{ end }}</span>
+              <input name="organization_logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/x-icon">
+            </label>
+            {{ with index .FieldErrors "organization_logo_file" }}<small class="field-error">{{ . }}</small>{{ end }}
+            {{ with index .FieldErrors "organization_logo_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="settings-card" aria-labelledby="verification-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Verification and schema</span>
+          <h2 id="verification-title">Search platform details</h2>
+        </div>
+      </div>
+      <div class="settings-card__grid">
+        <label>
+          <span>Google site verification</span>
+          <input name="google_site_verification" value="{{ .Form.GoogleSiteVerification }}" placeholder="google-site-verification token">
+        </label>
+        <label>
+          <span>Bing site verification</span>
+          <input name="bing_site_verification" value="{{ .Form.BingSiteVerification }}" placeholder="msvalidate token">
+        </label>
+        <label class="checkbox-label"><input name="structured_data_enabled" type="checkbox" value="1" {{ if .Form.StructuredDataEnabled }}checked{{ end }}> <span>Structured data enabled</span></label>
+        <label>
+          <span>Organization name</span>
+          <input name="organization_name" value="{{ .Form.OrganizationName }}" placeholder="ThaiLegalProtection">
+        </label>
+        <label>
+          <span>Organization URL</span>
+          <input name="organization_url" type="url" value="{{ .Form.OrganizationURL }}" placeholder="https://example.com">
+          {{ with index .FieldErrors "organization_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+      </div>
+    </section>
+
+    <div class="settings-actions">
+      <div>
+        <strong>SEO changes affect public metadata</strong>
+        <span>Save after uploading images or changing crawler, social, and structured data settings.</span>
+      </div>
+      <button class="primary-button" type="submit">Save SEO settings</button>
+    </div>
+  </form>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

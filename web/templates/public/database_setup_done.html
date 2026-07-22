@@ -1,0 +1,9 @@
+{{ define "public/database_setup_done.html" }}
+{{ template "public/page-start" . }}
+<section class="message-page" aria-labelledby="database-done-title">
+  <p class="landing__eyebrow">Database setup</p>
+  <h1 id="database-done-title">Database setup complete</h1>
+  <p class="landing__description">The bootstrap configuration was saved. Restart the server, then continue with application setup at <a class="text-link" href="/setup">/setup</a>.</p>
+</section>
+{{ template "public/page-end" . }}
+{{ end }}

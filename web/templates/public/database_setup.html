@@ -1,0 +1,85 @@
+{{ define "public/database_setup.html" }}
+{{ template "public/page-start" . }}
+<section class="panel" aria-labelledby="database-setup-title">
+  <div class="panel__header">
+    <p class="landing__eyebrow">Database setup</p>
+    <h1 id="database-setup-title">Choose your database</h1>
+    <p class="landing__description">SQLite is recommended for small deployments. MySQL is available when you already operate a database server.</p>
+  </div>
+  {{ if .Message }}<p class="notice">{{ .Message }}</p>{{ end }}
+  {{ with index .FieldErrors "database" }}<p class="alert" role="alert">{{ . }}</p>{{ end }}
+
+  <form class="form-grid database-setup-form" method="post" action="/setup/database/test" data-database-setup-form novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+    <label class="span-2">
+      <span>Database driver</span>
+      <select name="driver" data-driver-select aria-describedby="driver-help">
+        <option value="sqlite" {{ if eq .Config.Database.Driver "sqlite" }}selected{{ end }}>SQLite</option>
+        <option value="mysql" {{ if eq .Config.Database.Driver "mysql" }}selected{{ end }}>MySQL</option>
+      </select>
+      <small id="driver-help">Choose SQLite for the simplest setup. Choose MySQL only when you already have a database server ready.</small>
+    </label>
+
+    <fieldset class="database-section span-2" data-driver-section="sqlite"{{ if ne .Config.Database.Driver "sqlite" }} hidden{{ end }}>
+      <legend>SQLite configuration</legend>
+      <p>Recommended for small deployments. No separate database server is required, but the database file must be backed up and writable by the app.</p>
+      <label>
+        <span>SQLite file path</span>
+        <input name="sqlite_path" value="{{ .Config.Database.SQLite.Path }}">
+      </label>
+    </fieldset>
+
+    <fieldset class="database-section span-2" data-driver-section="mysql"{{ if ne .Config.Database.Driver "mysql" }} hidden{{ end }}>
+      <legend>MySQL configuration</legend>
+      <p>Use MySQL when you already manage a database server. The app will test this connection before saving and will not show the password again.</p>
+      <div class="helper-list">
+        <span>Needs a reachable host and database name.</span>
+        <span>Use an app-specific MySQL user with migration permissions.</span>
+        <span>Local/private database hosts are allowed; cloud metadata and unsafe hosts are rejected.</span>
+      </div>
+      <div class="database-fields">
+        <label><span>MySQL host</span><input name="mysql_host" value="{{ .Config.Database.MySQL.Host }}"></label>
+        <label><span>MySQL port</span><input name="mysql_port" inputmode="numeric" value="{{ .Config.Database.MySQL.Port }}"></label>
+        <label><span>MySQL database</span><input name="mysql_name" value="{{ .Config.Database.MySQL.Name }}"></label>
+        <label><span>MySQL username</span><input name="mysql_user" value="{{ .Config.Database.MySQL.User }}"></label>
+        <label><span>MySQL password</span><input name="mysql_password" type="password" autocomplete="new-password"></label>
+        <label><span>MySQL TLS mode</span><input name="mysql_tls_mode" value="{{ .Config.Database.MySQL.TLSMode }}" placeholder="optional"></label>
+      </div>
+    </fieldset>
+
+    <div class="form-actions">
+      <button class="secondary-button" type="submit">Test connection</button>
+    </div>
+  </form>
+
+  <form class="form-grid database-save-form" method="post" action="/setup/database" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+    <input type="hidden" name="connection_proof" value="{{ .Proof }}">
+    <input type="hidden" name="driver" value="{{ .Config.Database.Driver }}">
+    <input type="hidden" name="sqlite_path" value="{{ .Config.Database.SQLite.Path }}">
+    {{ if eq .Config.Database.Driver "mysql" }}
+    <input type="hidden" name="mysql_host" value="{{ .Config.Database.MySQL.Host }}">
+    <input type="hidden" name="mysql_port" value="{{ .Config.Database.MySQL.Port }}">
+    <input type="hidden" name="mysql_name" value="{{ .Config.Database.MySQL.Name }}">
+    <input type="hidden" name="mysql_user" value="{{ .Config.Database.MySQL.User }}">
+    <input type="hidden" name="mysql_tls_mode" value="{{ .Config.Database.MySQL.TLSMode }}">
+    {{ end }}
+    <div class="setup-summary span-2">
+      <strong>Ready to save</strong>
+      {{ if .Proof }}
+        <p>The {{ .Config.Database.Driver }} connection test passed for this exact configuration.</p>
+      {{ else }}
+        <p>Test the selected database configuration before saving.</p>
+      {{ end }}
+    </div>
+    {{ if eq .Config.Database.Driver "mysql" }}
+      <label class="span-2"><span>Re-enter MySQL password before saving</span><input name="mysql_password" type="password" autocomplete="new-password"></label>
+    {{ end }}
+    <div class="form-actions">
+      <button class="primary-button" type="submit" {{ if not .Proof }}disabled{{ end }}>Save database configuration</button>
+    </div>
+  </form>
+</section>
+<script src="/static/js/database-setup.js" defer></script>
+{{ template "public/page-end" . }}
+{{ end }}

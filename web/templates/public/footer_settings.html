@@ -1,0 +1,105 @@
+{{ define "public/footer_settings.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="footer-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="footer-title">Footer Settings</h1>
+    </div>
+  </div>
+  {{ if .Saved }}<p class="notice">Footer settings saved.</p>{{ end }}
+
+  <form class="footer-form" method="post" action="/admin/settings/footer" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+
+    <section class="settings-card settings-card--hero" aria-labelledby="footer-visibility-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Public footer</span>
+          <h2 id="footer-visibility-title">Footer visibility</h2>
+        </div>
+      </div>
+      <label class="seo-toggle footer-toggle">
+        <input name="footer_enabled" type="checkbox" value="1" {{ if .Form.FooterEnabled }}checked{{ end }}>
+        <span><strong>Footer enabled</strong><small>Show the footer on the public landing page with company, legal, and support information.</small></span>
+      </label>
+    </section>
+
+    <section class="settings-card" aria-labelledby="footer-copy-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Footer copy</span>
+          <h2 id="footer-copy-title">Public text content</h2>
+        </div>
+      </div>
+      <div class="settings-card__grid">
+        <label>
+          <span>Footer brand text</span>
+          <input name="footer_brand_text" value="{{ .Form.FooterBrandText }}" maxlength="120" placeholder="ThaiLegalProtection">
+          <span class="input-meta"><small>Main footer heading. Use your product or company name.</small><small>Max 120 characters</small></span>
+          {{ with index .FieldErrors "footer_brand_text" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+
+        <label>
+          <span>Copyright text</span>
+          <input name="copyright_text" value="{{ .Form.CopyrightText }}" placeholder="Copyright 2026 ThaiLegalProtection">
+          <span class="input-meta"><small>Shown in the bottom row. Include year and owner name.</small></span>
+        </label>
+
+        <label class="span-2">
+          <span>Footer description</span>
+          <textarea name="footer_description" rows="4" placeholder="A short sentence explaining the service and why visitors can trust this link.">{{ .Form.FooterDescription }}</textarea>
+          <span class="input-meta"><small>Brief summary shown under the footer heading. Keep it clear and customer-facing.</small><small>Max 300 characters</small></span>
+          {{ with index .FieldErrors "footer_description" }}<small class="field-error">{{ . }}</small>{{ end }}
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card" aria-labelledby="footer-support-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Support and location</span>
+          <h2 id="footer-support-title">Visitor help details</h2>
+        </div>
+      </div>
+      <div class="settings-card__grid">
+        <label>
+          <span>Support text</span>
+          <input name="support_text" value="{{ .Form.SupportText }}" placeholder="Need help with the app? Contact our support team.">
+          <span class="input-meta"><small>Small helper message above the support email in the footer.</small></span>
+        </label>
+
+        <label>
+          <span>Address</span>
+          <input name="footer_address" value="{{ .Form.FooterAddress }}" placeholder="Company address or operating region">
+          <span class="input-meta"><small>Optional location or address shown with the footer brand copy.</small></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card" aria-labelledby="footer-credit-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Protected credit</span>
+          <h2 id="footer-credit-title">Powered-by link</h2>
+        </div>
+      </div>
+      <p class="footer-credit-note">
+        The public footer always includes
+        <a href="https://phyowaiyan.com/" rel="noopener noreferrer" target="_blank">Powered-by Phyo Wai Yan</a>.
+      </p>
+    </section>
+
+    <div class="settings-actions">
+      <div>
+        <strong>Footer content appears on the public landing page</strong>
+        <span>Legal links are managed by the Legal Content page, and the powered-by credit is fixed in the application.</span>
+      </div>
+      <button class="primary-button" type="submit">Save footer</button>
+    </div>
+  </form>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

@@ -1,0 +1,144 @@
+{{ define "public/branding_settings.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="branding-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="branding-title">Branding Settings</h1>
+    </div>
+  </div>
+  {{ if .Saved }}<p class="notice">Branding settings saved.</p>{{ end }}
+
+  <form class="branding-form" method="post" action="/admin/settings/branding" enctype="multipart/form-data" novalidate data-branding-form>
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+    <input type="hidden" name="logo_url" value="{{ .Form.LogoURL }}">
+    <input type="hidden" name="dark_logo_url" value="{{ .Form.DarkLogoURL }}">
+    <input type="hidden" name="favicon_url" value="{{ .Form.FaviconURL }}">
+    <input type="hidden" name="apple_touch_icon_url" value="{{ .Form.AppleTouchIconURL }}">
+    <input type="hidden" name="default_social_image_url" value="{{ .Form.DefaultSocialImageURL }}">
+
+    <section class="settings-card settings-card--hero" aria-labelledby="tagline-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Brand voice</span>
+          <h2 id="tagline-title">Landing page tagline</h2>
+        </div>
+      </div>
+      <label>
+        <span>Site tagline</span>
+        <input name="site_tagline" value="{{ .Form.SiteTagline }}" placeholder="Fast legal protection on every device" data-word-count data-word-target="tagline-word-count" data-word-min="3" data-word-max="12">
+        <span class="input-meta"><small>A short promise shown below the public site name. Use 3 to 12 words.</small><small id="tagline-word-count">0/3-12 words</small></span>
+        {{ with index .FieldErrors "site_tagline" }}<small class="field-error">{{ . }}</small>{{ end }}
+      </label>
+    </section>
+
+    <section class="settings-card" aria-labelledby="brand-assets-title">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Image assets</span>
+          <h2 id="brand-assets-title">Uploaded brand files</h2>
+        </div>
+      </div>
+
+      <div class="brand-asset-grid">
+        <article class="brand-asset-card">
+          <div class="brand-asset-card__preview brand-asset-card__preview--light">
+            {{ if .Form.LogoURL }}<img src="{{ .Form.LogoURL }}" alt="Current logo">{{ else }}<span>No logo</span>{{ end }}
+          </div>
+          <div class="brand-asset-card__body">
+            <strong>Logo</strong>
+            <span>Shown in the appbar and hero area.</span>
+            {{ with .Form.LogoURL }}<code>{{ . }}</code>{{ end }}
+            <label class="brand-upload-action">
+              <span>{{ if .Form.LogoURL }}Reupload logo{{ else }}Upload logo{{ end }}</span>
+              <input name="logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/x-icon">
+            </label>
+            {{ with index .FieldErrors "logo_file" }}<small class="field-error">{{ . }}</small>{{ end }}
+            {{ with index .FieldErrors "logo_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+          </div>
+        </article>
+
+        <article class="brand-asset-card">
+          <div class="brand-asset-card__preview brand-asset-card__preview--dark">
+            {{ if .Form.DarkLogoURL }}<img src="{{ .Form.DarkLogoURL }}" alt="Current dark logo">{{ else }}<span>No dark logo</span>{{ end }}
+          </div>
+          <div class="brand-asset-card__body">
+            <strong>Dark logo</strong>
+            <span>Optional alternate mark for dark surfaces.</span>
+            {{ with .Form.DarkLogoURL }}<code>{{ . }}</code>{{ end }}
+            <label class="brand-upload-action">
+              <span>{{ if .Form.DarkLogoURL }}Reupload dark logo{{ else }}Upload dark logo{{ end }}</span>
+              <input name="dark_logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/x-icon">
+            </label>
+            {{ with index .FieldErrors "dark_logo_file" }}<small class="field-error">{{ . }}</small>{{ end }}
+            {{ with index .FieldErrors "dark_logo_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+          </div>
+        </article>
+
+        <article class="brand-asset-card">
+          <div class="brand-asset-card__preview brand-asset-card__preview--icon">
+            {{ if .Form.FaviconURL }}<img src="{{ .Form.FaviconURL }}" alt="Current favicon">{{ else }}<span>No favicon</span>{{ end }}
+          </div>
+          <div class="brand-asset-card__body">
+            <strong>Favicon</strong>
+            <span>Browser tab icon for the public site.</span>
+            {{ with .Form.FaviconURL }}<code>{{ . }}</code>{{ end }}
+            <label class="brand-upload-action">
+              <span>{{ if .Form.FaviconURL }}Reupload favicon{{ else }}Upload favicon{{ end }}</span>
+              <input name="favicon_file" type="file" accept="image/png,image/jpeg,image/webp,image/x-icon">
+            </label>
+            {{ with index .FieldErrors "favicon_file" }}<small class="field-error">{{ . }}</small>{{ end }}
+            {{ with index .FieldErrors "favicon_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+          </div>
+        </article>
+
+        <article class="brand-asset-card">
+          <div class="brand-asset-card__preview brand-asset-card__preview--icon">
+            {{ if .Form.AppleTouchIconURL }}<img src="{{ .Form.AppleTouchIconURL }}" alt="Current Apple touch icon">{{ else }}<span>No Apple icon</span>{{ end }}
+          </div>
+          <div class="brand-asset-card__body">
+            <strong>Apple touch icon</strong>
+            <span>Home screen icon for iOS devices.</span>
+            {{ with .Form.AppleTouchIconURL }}<code>{{ . }}</code>{{ end }}
+            <label class="brand-upload-action">
+              <span>{{ if .Form.AppleTouchIconURL }}Reupload Apple icon{{ else }}Upload Apple icon{{ end }}</span>
+              <input name="apple_touch_icon_file" type="file" accept="image/png,image/jpeg,image/webp,image/x-icon">
+            </label>
+            {{ with index .FieldErrors "apple_touch_icon_file" }}<small class="field-error">{{ . }}</small>{{ end }}
+            {{ with index .FieldErrors "apple_touch_icon_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+          </div>
+        </article>
+
+        <article class="brand-asset-card brand-asset-card--wide">
+          <div class="brand-asset-card__preview brand-asset-card__preview--social">
+            {{ if .Form.DefaultSocialImageURL }}<img src="{{ .Form.DefaultSocialImageURL }}" alt="Current social sharing image">{{ else }}<span>No social image</span>{{ end }}
+          </div>
+          <div class="brand-asset-card__body">
+            <strong>Social sharing image</strong>
+            <span>Preview image used by social cards and shared public links.</span>
+            {{ with .Form.DefaultSocialImageURL }}<code>{{ . }}</code>{{ end }}
+            <label class="brand-upload-action">
+              <span>{{ if .Form.DefaultSocialImageURL }}Reupload social image{{ else }}Upload social image{{ end }}</span>
+              <input name="default_social_image_file" type="file" accept="image/png,image/jpeg,image/webp">
+            </label>
+            {{ with index .FieldErrors "default_social_image_file" }}<small class="field-error">{{ . }}</small>{{ end }}
+            {{ with index .FieldErrors "default_social_image_url" }}<small class="field-error">{{ . }}</small>{{ end }}
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <div class="settings-actions">
+      <div>
+        <strong>Branding files are stored locally</strong>
+        <span>Upload new images here to replace the current media paths without editing URLs by hand.</span>
+      </div>
+      <button class="primary-button" type="submit">Save branding</button>
+    </div>
+  </form>
+</section>
+{{ template "admin/shell-end" . }}
+<script src="/static/js/settings-form.js" defer></script>
+{{ template "public/page-end" . }}
+{{ end }}

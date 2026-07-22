@@ -1,0 +1,9 @@
+{{ define "public/error.html" }}
+{{ template "public/page-start" . }}
+<section class="message-page" aria-labelledby="error-title">
+  <p class="landing__eyebrow">Error</p>
+  <h1 id="error-title">{{ .Heading }}</h1>
+  <p class="landing__description">{{ .Message }}</p>
+</section>
+{{ template "public/page-end" . }}
+{{ end }}
