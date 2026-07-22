@@ -40,7 +40,7 @@ jobs:
           shasum -a 256 dist/ty2shorten-${VERSION}-linux-amd64.tar.gz > dist/checksums.txt
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/ty2shorten-${{ github.ref_name }}-linux-amd64.tar.gz
