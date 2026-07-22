@@ -1,0 +1,101 @@
+{{ define "public/analytics_settings.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page" aria-labelledby="analytics-settings-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="analytics-settings-title">Analytics Settings</h1>
+    </div>
+  </div>
+
+  {{ if .Saved }}<div class="settings-alert">Analytics settings saved.</div>{{ end }}
+
+  <form class="settings-form analytics-settings-form" method="post" action="/admin/settings/analytics">
+    <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+
+    <section class="settings-card settings-card--hero">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Privacy controls</span>
+          <h2>Tracking behavior</h2>
+          <p>Control first-party analytics collection. The default mode avoids raw IP storage and does not use fingerprinting.</p>
+        </div>
+      </div>
+      <div class="analytics-toggle-grid">
+        {{ template "analytics/checkbox" dict "Name" "analytics_enabled" "Label" "Analytics enabled" "Description" "Collect eligible public page views and redirects." "Checked" .Form.AnalyticsEnabled }}
+        {{ template "analytics/checkbox" dict "Name" "page_view_tracking_enabled" "Label" "Page-view tracking enabled" "Description" "Record public HTML page views only." "Checked" .Form.PageViewTrackingEnabled }}
+        {{ template "analytics/checkbox" dict "Name" "redirect_tracking_enabled" "Label" "Redirect tracking enabled" "Description" "Record app-store and short-link redirects." "Checked" .Form.RedirectTrackingEnabled }}
+        {{ template "analytics/checkbox" dict "Name" "bot_tracking_enabled" "Label" "Bot tracking enabled" "Description" "Keep crawler and social preview traffic in analytics." "Checked" .Form.BotTrackingEnabled }}
+        {{ template "analytics/checkbox" dict "Name" "exclude_bots_from_dashboard" "Label" "Exclude bots from dashboard totals" "Description" "Keep human metrics cleaner while preserving bot records." "Checked" .Form.ExcludeBotsFromDashboard }}
+        {{ template "analytics/checkbox" dict "Name" "unique_visitor_estimation_enabled" "Label" "Unique visitor estimation enabled" "Description" "Use approximate rotating HMAC identifiers." "Checked" .Form.UniqueVisitorEstimationEnabled }}
+        {{ template "analytics/checkbox" dict "Name" "referrer_tracking_enabled" "Label" "Referrer tracking enabled" "Description" "Store safe host/path without external query strings." "Checked" .Form.ReferrerTrackingEnabled }}
+      </div>
+    </section>
+
+    <section class="settings-card">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">IP handling mode</span>
+          <h2>Data minimization</h2>
+          <p>Use hashed or network-only IP processing. Raw IP storage is intentionally unavailable in the standard dashboard.</p>
+        </div>
+      </div>
+      <div class="settings-grid">
+        <label>
+          <span>IP handling mode</span>
+          <select name="ip_handling_mode">
+            <option value="hashed" {{ if eq .Form.IPHandlingMode "hashed" }}selected{{ end }}>Hashed with HMAC</option>
+            <option value="network_only" {{ if eq .Form.IPHandlingMode "network_only" }}selected{{ end }}>Network only (/24 IPv4, /48 IPv6)</option>
+            <option value="none" {{ if eq .Form.IPHandlingMode "none" }}selected{{ end }}>Do not store IP-derived values</option>
+          </select>
+          <span class="input-meta"><small>{{ index .FieldErrors "ip_handling_mode" }}</small></span>
+        </label>
+        <label>
+          <span>Session cookie lifetime</span>
+          <input name="session_cookie_lifetime_days" type="number" min="1" max="365" value="{{ .Form.SessionCookieLifetimeDays }}">
+          <span class="input-meta"><small>How many days the first-party analytics session cookie can live.</small></span>
+        </label>
+        <label>
+          <span>Data retention</span>
+          <input name="data_retention_days" type="number" min="7" max="3650" value="{{ .Form.DataRetentionDays }}">
+          <span class="input-meta"><small>Analytics retention period in days. Default is privacy-conscious: 90 days.</small></span>
+        </label>
+        <label>
+          <span>Internal traffic exclusion CIDRs</span>
+          <input name="internal_traffic_exclusion_cidrs" value="{{ .Form.InternalTrafficExclusionCIDRs }}" placeholder="10.0.0.0/8,192.168.0.0/16">
+          <span class="input-meta"><small>{{ if index .FieldErrors "internal_traffic_exclusion_cidrs" }}{{ index .FieldErrors "internal_traffic_exclusion_cidrs" }}{{ else }}Comma-separated CIDR ranges to ignore.{{ end }}</small></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-card">
+      <div class="settings-card__header">
+        <div>
+          <span class="dashboard-section-label">Operations</span>
+          <h2>Retention and export</h2>
+          <p>Keep analytics storage predictable and allow admins to export redirect logs when they need an offline audit file.</p>
+        </div>
+      </div>
+      <div class="analytics-toggle-grid analytics-toggle-grid--compact">
+        {{ template "analytics/checkbox" dict "Name" "automatic_cleanup_enabled" "Label" "Automatic cleanup enabled" "Description" "Allow scheduled retention cleanup when configured." "Checked" .Form.AutomaticCleanupEnabled }}
+        {{ template "analytics/checkbox" dict "Name" "analytics_export_enabled" "Label" "Analytics export enabled" "Description" "Allow authenticated admins to download CSV exports." "Checked" .Form.AnalyticsExportEnabled }}
+      </div>
+    </section>
+
+    <button class="primary-button" type="submit">Save analytics settings</button>
+  </form>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}
+
+{{ define "analytics/checkbox" }}
+<label class="analytics-toggle">
+  <input type="checkbox" name="{{ .Name }}" value="1" {{ if .Checked }}checked{{ end }}>
+  <span>
+    <strong>{{ .Label }}</strong>
+    <small>{{ .Description }}</small>
+  </span>
+</label>
+{{ end }}

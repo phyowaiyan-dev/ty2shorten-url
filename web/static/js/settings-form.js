@@ -1,6 +1,6 @@
 (function () {
-  const form = document.querySelector("[data-settings-form]");
-  if (!form) {
+  const forms = document.querySelectorAll("[data-settings-form], [data-branding-form]");
+  if (!forms.length) {
     return;
   }
 
@@ -48,7 +48,7 @@
   }
 
   function updateStoreStatus(input) {
-    const status = form.querySelector(`[data-url-status="${input.dataset.urlKind}"]`);
+    const status = input.form.querySelector(`[data-url-status="${input.dataset.urlKind}"]`);
     if (!status) {
       return;
     }
@@ -62,19 +62,22 @@
     status.dataset.state = isValid ? "valid" : "invalid";
   }
 
-  form.querySelectorAll("[data-count-chars]").forEach((input) => {
-    updateCharacterCounter(input);
-    input.addEventListener("input", () => updateCharacterCounter(input));
-  });
+  forms.forEach((form) => {
+    form.querySelectorAll("[data-count-chars]").forEach((input) => {
+      updateCharacterCounter(input);
+      input.addEventListener("input", () => updateCharacterCounter(input));
+    });
 
-  form.querySelectorAll("[data-word-count]").forEach((input) => {
-    updateWordCounter(input);
-    input.addEventListener("input", () => updateWordCounter(input));
-  });
+    form.querySelectorAll("[data-word-count]").forEach((input) => {
+      updateWordCounter(input);
+      input.addEventListener("input", () => updateWordCounter(input));
+    });
 
-  form.querySelectorAll("[data-url-kind]").forEach((input) => {
-    updateStoreStatus(input);
-    input.addEventListener("input", () => updateStoreStatus(input));
-    input.addEventListener("blur", () => updateStoreStatus(input));
+    form.querySelectorAll("[data-url-kind]").forEach((input) => {
+      updateStoreStatus(input);
+      input.addEventListener("input", () => updateStoreStatus(input));
+      input.addEventListener("blur", () => updateStoreStatus(input));
+    });
+
   });
 })();

@@ -1,0 +1,59 @@
+{{ define "public/analytics_session.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page analytics-page" aria-labelledby="analytics-session-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="analytics-session-title">Session detail</h1>
+    </div>
+    <a class="secondary-button button-link" href="/admin/analytics">Back to analytics</a>
+  </div>
+
+  <section class="analytics-hero analytics-hero--session">
+    <div>
+      <span class="dashboard-section-label">Privacy-safe session</span>
+      <h2>{{ .Session.SessionIDShort }}</h2>
+      <strong class="analytics-range-label">Raw IP is not shown</strong>
+      <p>This page shows inferred traffic details for one first-party analytics session. It does not expose raw IP addresses, cookies, or full opaque session identifiers.</p>
+    </div>
+  </section>
+
+  <div class="analytics-stat-grid" aria-label="Session summary">
+    <article><span>First seen</span><strong>{{ .Session.FirstSeen }}</strong><small>Session start estimate</small></article>
+    <article><span>Last seen</span><strong>{{ .Session.LastSeen }}</strong><small>{{ .Session.Duration }}</small></article>
+    <article><span>Page views</span><strong>{{ .Session.PageViewCount }}</strong><small>Public HTML pages</small></article>
+    <article><span>Redirects</span><strong>{{ .Session.RedirectCount }}</strong><small>App or short-link redirects</small></article>
+    <article><span>Device</span><strong>{{ .Session.DeviceType }}</strong><small>{{ .Session.OperatingSystem }} / {{ .Session.Browser }}</small></article>
+    <article><span>Bot status</span><strong>{{ .Session.BotStatus }}</strong><small>Heuristic classification</small></article>
+  </div>
+
+  <div class="analytics-grid">
+    <section class="analytics-panel">
+      <div class="analytics-panel__header"><div><span class="dashboard-section-label">Acquisition</span><h2>Session source</h2></div></div>
+      <div class="analytics-breakdown">
+        <div><span>Referrer</span><strong>{{ .Session.Referrer }}</strong></div>
+      </div>
+    </section>
+    <section class="analytics-panel">
+      <div class="analytics-panel__header"><div><span class="dashboard-section-label">Navigation</span><h2>Timeline</h2></div></div>
+      {{ if .Session.Timeline }}
+      <div class="analytics-timeline">
+        {{ range .Session.Timeline }}
+        <div>
+          <time>{{ .Time }}</time>
+          <strong>{{ .Kind }}</strong>
+          <span>{{ .Label }}</span>
+          <small>{{ .Path }}</small>
+        </div>
+        {{ end }}
+      </div>
+      {{ else }}
+      <div class="analytics-empty">No page views or redirects recorded for this session yet.</div>
+      {{ end }}
+    </section>
+  </div>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}

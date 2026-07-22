@@ -3,13 +3,25 @@ package services
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 
+	"github.com/phyowaiyan-dev/ty2shorten-url/internal/models"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/repositories"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/validation"
 )
+
+const (
+	DefaultFrontendThemeColor  = "#0ea5e9"
+	DefaultThemeSecondaryColor = "#10b981"
+	DefaultAdminThemeColor     = DefaultFrontendThemeColor
+)
+
+var themeColorPattern = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
 
 // SettingsForm contains editable application settings.
 type SettingsForm struct {
@@ -55,6 +67,37 @@ type BrandingForm struct {
 	FaviconURL            string
 	AppleTouchIconURL     string
 	DefaultSocialImageURL string
+}
+
+// ThemeView contains safe values used by templates as CSS variables.
+type ThemeView struct {
+	Primary   template.CSS
+	Secondary template.CSS
+	Contrast  template.CSS
+}
+
+// FrontendTheme returns the fixed logo-based public theme.
+func FrontendTheme(_ *models.AppSetting) ThemeView {
+	return themeView(DefaultFrontendThemeColor)
+}
+
+// AdminTheme returns the fixed logo-based admin theme.
+func AdminTheme(_ *models.AppSetting) ThemeView {
+	return themeView(DefaultFrontendThemeColor)
+}
+
+// CurrentAdminTheme returns the fixed project theme for admin chrome.
+func (s *SettingsService) CurrentAdminTheme() (ThemeView, error) {
+	return AdminTheme(nil), nil
+}
+
+func themeView(color string) ThemeView {
+	color = normalizedThemeColor(color, DefaultFrontendThemeColor)
+	return ThemeView{
+		Primary:   template.CSS(color),
+		Secondary: template.CSS(DefaultThemeSecondaryColor),
+		Contrast:  template.CSS(themeContrast(color)),
+	}
 }
 
 // FooterForm contains editable public footer settings.
@@ -522,4 +565,27 @@ func validateMediaOrHTTPURL(fieldErrors map[string]string, field, value string, 
 		return
 	}
 	validateOptionalURL(fieldErrors, field, value, requireHTTPS)
+}
+
+func normalizedThemeColor(value, fallback string) string {
+	trimmed := strings.TrimSpace(value)
+	if !themeColorPattern.MatchString(trimmed) {
+		trimmed = fallback
+	}
+	return strings.ToLower(trimmed)
+}
+
+func themeContrast(color string) string {
+	hex := strings.TrimPrefix(normalizedThemeColor(color, DefaultFrontendThemeColor), "#")
+	if len(hex) != 6 {
+		return "#ffffff"
+	}
+	red, _ := strconv.ParseInt(hex[0:2], 16, 64)
+	green, _ := strconv.ParseInt(hex[2:4], 16, 64)
+	blue, _ := strconv.ParseInt(hex[4:6], 16, 64)
+	luminance := (0.299*float64(red) + 0.587*float64(green) + 0.114*float64(blue)) / 255
+	if luminance > 0.62 {
+		return "#020617"
+	}
+	return "#ffffff"
 }

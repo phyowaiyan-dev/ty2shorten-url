@@ -47,7 +47,7 @@ Check service logs and database access:
 
 ```sh
 sudo journalctl -u ty2shorten --since "30 minutes ago"
-curl -v http://127.0.0.1:8080/health
+curl -v http://127.0.0.1:8722/health
 ```
 
 ## systemd Restart Loops

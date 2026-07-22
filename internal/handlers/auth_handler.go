@@ -5,19 +5,21 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/phyowaiyan-dev/ty2shorten-url/internal/repositories"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/services"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/session"
 )
 
 // AuthHandler serves administrator login and logout.
 type AuthHandler struct {
-	auth    *services.AuthService
-	session *session.Manager
+	auth     *services.AuthService
+	settings *repositories.SettingsRepository
+	session  *session.Manager
 }
 
 // NewAuthHandler constructs an AuthHandler.
-func NewAuthHandler(auth *services.AuthService, sessions *session.Manager) *AuthHandler {
-	return &AuthHandler{auth: auth, session: sessions}
+func NewAuthHandler(auth *services.AuthService, settings *repositories.SettingsRepository, sessions *session.Manager) *AuthHandler {
+	return &AuthHandler{auth: auth, settings: settings, session: sessions}
 }
 
 // ShowLogin renders the administrator login form.
@@ -67,9 +69,22 @@ func (h *AuthHandler) renderLogin(c *gin.Context, status int, email string, mess
 	}
 
 	c.HTML(status, "public/login.html", gin.H{
-		"Title":     "Admin login",
-		"CSRFToken": csrfToken,
-		"Email":     email,
-		"Error":     message,
+		"Title":       "Admin login",
+		"AdminChrome": true,
+		"Theme":       h.adminTheme(),
+		"CSRFToken":   csrfToken,
+		"Email":       email,
+		"Error":       message,
 	})
+}
+
+func (h *AuthHandler) adminTheme() services.ThemeView {
+	if h.settings == nil {
+		return services.AdminTheme(nil)
+	}
+	settings, err := h.settings.Current()
+	if err != nil {
+		return services.AdminTheme(nil)
+	}
+	return services.AdminTheme(settings)
 }

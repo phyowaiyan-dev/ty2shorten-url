@@ -3,12 +3,14 @@
 <section class="legal-page" aria-labelledby="legal-title">
   <p class="landing__eyebrow">Public information</p>
   <h1 id="legal-title">{{ .Heading }}</h1>
+  {{ with .Message }}
   <p class="legal-page__lead">{{ .Message }}</p>
+  {{ end }}
   <div class="legal-page__panel">
     {{ if .Configured }}
       <div class="legal-markdown">{{ .Content.HTML }}</div>
     {{ else }}
-      <p>This content is managed by the administrator and should be added before public launch.</p>
+      <p>This page has not been configured yet.</p>
     {{ end }}
     <a class="secondary-button button-link" href="/">Back to home</a>
   </div>

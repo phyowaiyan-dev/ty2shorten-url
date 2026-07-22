@@ -175,6 +175,46 @@ func TestAdminDashboardShowsSetupScoreAndMissingItems(t *testing.T) {
 	}
 }
 
+func TestAdminDashboardHidesSetupNotesWhenComplete(t *testing.T) {
+	app := newRouteTestApp(t)
+	seedConfiguredApp(t, app.db)
+	seedShortLink(t, app.db, "ready-1", "https://example.com/ready", true)
+	if err := app.db.Model(&models.AppSetting{}).Where("1 = 1").Updates(map[string]any{
+		"site_tagline":             "One link for every device",
+		"logo_url":                 "/media/logo.png",
+		"default_meta_title":       "TY2 Shorten",
+		"default_meta_description": "Short links and app redirects.",
+		"canonical_base_url":       "https://example.com",
+	}).Error; err != nil {
+		t.Fatalf("complete settings: %v", err)
+	}
+	app.login(t)
+
+	recorder := app.do(t, http.MethodGet, "/admin", nil, nil)
+	assertStatus(t, recorder, http.StatusOK)
+	body := recorder.Body.String()
+	for _, want := range []string{
+		"Launch readiness",
+		"100%",
+		"11 of 11 setup items complete",
+		"Production ready",
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("expected complete dashboard marker %q, got: %s", want, body)
+		}
+	}
+	for _, removed := range []string{
+		"Next setup actions",
+		"Missing setup",
+		"Production checklist",
+		"0 missing setup items",
+	} {
+		if strings.Contains(body, removed) {
+			t.Fatalf("complete dashboard should hide setup note %q, got: %s", removed, body)
+		}
+	}
+}
+
 func TestAccountPageShowsLoggedInAdminProfile(t *testing.T) {
 	app := newRouteTestApp(t)
 	seedConfiguredApp(t, app.db)
@@ -262,6 +302,8 @@ func TestAboutProjectPageRendersReadOnlyMarkdown(t *testing.T) {
 		"hello@phyowaiyan.com",
 		"Commercial use requires a purchased commercial license",
 		`class="admin-brand" href="/admin/about" aria-current="page"`,
+		`<img class="admin-brand__logo" src="/assets/web-app-manifest-192x192.png"`,
+		`<link rel="icon" href="/assets/favicon.ico" sizes="any">`,
 	} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("expected about page marker %q, got: %s", want, body)
@@ -272,6 +314,22 @@ func TestAboutProjectPageRendersReadOnlyMarkdown(t *testing.T) {
 	}
 	if strings.Contains(body, `action="/admin/about"`) {
 		t.Fatalf("expected about page to be read-only, got: %s", body)
+	}
+}
+
+func TestBuiltInAssetsAreServed(t *testing.T) {
+	app := newRouteTestApp(t)
+
+	recorder := app.do(t, http.MethodGet, "/assets/favicon.ico", nil, nil)
+	assertStatus(t, recorder, http.StatusOK)
+	if got := recorder.Header().Get("Content-Type"); !strings.Contains(got, "image") && !strings.Contains(got, "octet-stream") {
+		t.Fatalf("Content-Type = %q, want icon/image response", got)
+	}
+
+	recorder = app.do(t, http.MethodGet, "/assets/site.webmanifest", nil, nil)
+	assertStatus(t, recorder, http.StatusOK)
+	if !strings.Contains(recorder.Body.String(), "/assets/web-app-manifest-192x192.png") {
+		t.Fatalf("manifest does not point at embedded assets: %s", recorder.Body.String())
 	}
 }
 
@@ -840,6 +898,8 @@ func seedConfiguredApp(t *testing.T, db *gorm.DB) {
 		DefaultURL:            "https://example.com",
 		PublicBaseURL:         "http://localhost:8722",
 		SupportEmail:          "support@example.com",
+		FrontendThemeColor:    "#0ea5e9",
+		AdminThemeColor:       "#0ea5e9",
 		FooterEnabled:         true,
 		FooterBrandText:       "Audit-ready links",
 		FooterDescription:     "A small public footer for the landing page.",

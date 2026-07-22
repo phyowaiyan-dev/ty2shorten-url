@@ -13,7 +13,7 @@ Screenshot or preview image: pending.
 
 ## Overview
 
-The application provides a public landing page, database bootstrap onboarding, first-run admin setup, administrator dashboard, app-store redirects, device detection, custom short links, configurable SEO, branding media, footer settings, and read-only audit logs. It is designed for small deployments where a single Go binary and SQLite database are easy to operate, while still allowing MySQL when an operator already has database infrastructure.
+The application provides a public landing page, database bootstrap onboarding, first-run admin setup, administrator dashboard, app-store redirects, device detection, custom short links, configurable SEO, branding media, footer settings, read-only audit logs, and privacy-aware first-party analytics. It is designed for small deployments where a single Go binary and SQLite database are easy to operate, while still allowing MySQL when an operator already has database infrastructure.
 
 ## Why Ty2Shorten URL?
 
@@ -36,6 +36,7 @@ The application provides a public landing page, database bootstrap onboarding, f
 - Configurable public footer.
 - Short-link list, create, edit, enable/disable, delete, click counts, and copyable public URLs.
 - Read-only audit log list and detail pages.
+- First-party analytics for public page views and redirects, including Android/iOS redirect logs, IP network/hash fields, device/browser/OS inference, referrer summaries, date filtering, session detail, CSV export, retention cleanup, and HMAC or network-only IP handling.
 - `/android`, `/apple`, `/get`, and `/r/:slug` redirects.
 - QR code generation for the `/get` URL.
 - Health endpoint with database check and safe version metadata.
@@ -81,6 +82,7 @@ More detail:
 - [Project structure](docs/project-structure.md)
 - [Database](docs/database.md)
 - [Security](docs/security.md)
+- [Analytics](docs/analytics.md)
 
 ## Project Structure
 
@@ -141,7 +143,7 @@ On an empty database, browser traffic redirects to `/setup`.
 | --- | --- | --- | --- | --- |
 | `APP_ENV` | `development` | Yes | No | `development`, `production`, or `test`. |
 | `APP_HOST` | `127.0.0.1` | Yes | No | Listen host. |
-| `APP_PORT` | `8722` | Yes | No | Local default; deployment example uses `8080`. |
+| `APP_PORT` | `8722` | Yes | No | Local-only app port used behind Apache. |
 | `DATABASE_PATH` | `./storage/ty2shorten.db` | Legacy/dev | No | Used as the default SQLite path before bootstrap config exists. |
 | `APP_CONFIG_PATH` | `./storage/config.json` | Yes | May contain secrets | Versioned bootstrap database config path. Use `/var/lib/ty2shorten/config.json` in production. |
 | `MEDIA_STORAGE_PATH` | `./storage/media` | Yes | No | Directory for uploaded logo/favicon/social images. |
@@ -223,6 +225,7 @@ go build -trimpath \
 
 Deployment files are provided for an Ubuntu VPS behind Apache:
 
+- [AWS Ubuntu Apache setup guide](docs/aws-ubuntu-apache-setup.md)
 - [Deployment overview](docs/deployment.md)
 - [Apache reverse proxy](docs/apache.md)
 - [systemd service](docs/systemd.md)

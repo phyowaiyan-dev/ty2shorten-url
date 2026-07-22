@@ -44,6 +44,7 @@ Ty2Shorten URL is an alpha-stage single-binary Go application. The core setup, a
 - [x] Branding/media tests cover valid upload, fake image rejection, oversized favicon rejection, public media serving, and public branding rendering.
 - [x] Footer settings tests cover updates, disabling, and unsafe URL rejection.
 - [x] Audit-log tests cover settings audit creation, filtering, detail view, redaction expectations, and read-only route behavior.
+- [x] Analytics tests cover device parsing, HMAC IP handling, referrer classification, automatic public tracking, admin authorization, redirect detail tables, session detail, retention cleanup, CSV export, and analytics settings updates.
 - [x] `go test -race ./...` passes locally.
 - [ ] Add explicit session-expiration tests.
 - [ ] Add explicit database-health-failure tests.
@@ -73,8 +74,11 @@ Ty2Shorten URL is an alpha-stage single-binary Go application. The core setup, a
 - [x] Short-link list/create/edit/enable/disable/delete is implemented.
 - [x] Click counts are displayed.
 - [x] Public short URLs are copyable as read-only fields.
+- [x] First-party analytics dashboard, date filtering, detailed redirect logs, CSV export, and settings are implemented.
+- [x] Privacy-safe analytics session detail page is implemented.
+- [x] Manual analytics retention cleanup is implemented.
 - [ ] Add pagination and search for large link sets.
-- [ ] Add richer analytics views.
+- [ ] Add long-term aggregate analytics views.
 
 ## Redirect Engine
 
@@ -118,6 +122,7 @@ Ty2Shorten URL is an alpha-stage single-binary Go application. The core setup, a
 - [x] Redirect resolution failures are logged safely.
 - [x] `/health` returns status, service, version, commit, and build time.
 - [x] Audit logs are persisted for general, SEO, branding, and footer settings changes.
+- [x] Analytics settings changes and CSV exports are persisted in administrator audit logs.
 - [ ] Audit every important mutation in a same-transaction policy.
 - [ ] Add log retention and rotation guidance for production.
 
@@ -153,6 +158,7 @@ Ty2Shorten URL is an alpha-stage single-binary Go application. The core setup, a
 - [x] README rewritten for open-source alpha status.
 - [x] docs/ structure added.
 - [x] Database bootstrap, SEO, robots/sitemap, social sharing, branding, media upload, footer, admin dashboard, and audit-log docs added.
+- [x] Analytics privacy and dashboard documentation added.
 - [x] Root contributing, security, support, changelog, governance, releasing, and acknowledgements documents added.
 - [ ] Add screenshots after the first stable UI pass.
 - [ ] Keep docs synchronized with route and deployment changes.
@@ -201,3 +207,5 @@ Ty2Shorten URL is an alpha-stage single-binary Go application. The core setup, a
 - [x] Database bootstrap configuration, dynamic crawler resources, media branding uploads, footer settings, and audit-log UI.
 - [x] Ubuntu/systemd/Apache deployment materials.
 - [x] GitHub CI foundation.
+
+

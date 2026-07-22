@@ -23,7 +23,7 @@
       <div class="settings-card__grid">
         <label>
           <span>Site name</span>
-          <input name="site_name" value="{{ .Form.SiteName }}" maxlength="80" placeholder="ThaiLegalProtection" autocomplete="organization" required data-count-chars data-count-target="site-name-count">
+          <input name="site_name" value="{{ .Form.SiteName }}" maxlength="80" placeholder="Phyo Wai Yan" autocomplete="organization" required data-count-chars data-count-target="site-name-count">
           <span class="input-meta"><small>Shown in the appbar, page title, and QR caption.</small><small id="site-name-count">0/80</small></span>
           {{ with index .FieldErrors "site_name" }}<small class="field-error">{{ . }}</small>{{ end }}
         </label>

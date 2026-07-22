@@ -29,14 +29,14 @@ The script creates or uses:
 See [apache.md](apache.md). Use Certbot:
 
 ```sh
-sudo certbot --apache -d app.thailegalprotection.com
+sudo certbot --apache -d app.phyowaiyan.com
 ```
 
 ## Health Verification
 
 ```sh
-curl -f http://127.0.0.1:8080/health
-curl -f https://app.thailegalprotection.com/health
+curl -f http://127.0.0.1:8722/health
+curl -f https://app.phyowaiyan.com/health
 ```
 
 ## Updates and Rollback
