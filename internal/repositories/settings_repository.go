@@ -145,3 +145,35 @@ func (r *SettingsRepository) UpdateLegalContent(settings *models.AppSetting) err
 	}
 	return nil
 }
+
+// UpdateAnalytics stores editable privacy-aware analytics settings without changing setup completion.
+func (r *SettingsRepository) UpdateAnalytics(settings *models.AppSetting) error {
+	if err := r.db.Model(settings).Select(
+		"analytics_enabled",
+		"page_view_tracking_enabled",
+		"redirect_tracking_enabled",
+		"bot_tracking_enabled",
+		"exclude_bots_from_dashboard",
+		"unique_visitor_estimation_enabled",
+		"ip_handling_mode",
+		"raw_user_agent_storage_enabled",
+		"referrer_tracking_enabled",
+		"utm_tracking_enabled",
+		"client_side_device_details_enabled",
+		"geolocation_enrichment_enabled",
+		"cookie_consent_required",
+		"session_cookie_lifetime_days",
+		"data_retention_days",
+		"automatic_cleanup_enabled",
+		"analytics_export_enabled",
+		"respect_do_not_track",
+		"respect_global_privacy_control",
+		"admin_ip_exclusion_list",
+		"internal_traffic_exclusion_cidrs",
+		"query_parameter_allowlist",
+		"query_parameter_denylist",
+	).Updates(settings).Error; err != nil {
+		return fmt.Errorf("update analytics settings: %w", err)
+	}
+	return nil
+}

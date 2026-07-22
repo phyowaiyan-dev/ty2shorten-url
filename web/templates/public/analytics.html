@@ -1,0 +1,162 @@
+{{ define "public/analytics.html" }}
+{{ template "public/page-start" . }}
+{{ template "admin/shell-start" . }}
+<section class="admin-page analytics-page" aria-labelledby="analytics-title">
+  <div class="admin-bar">
+    <div>
+      <p class="landing__eyebrow">Administrator</p>
+      <h1 id="analytics-title">Analytics</h1>
+    </div>
+  </div>
+
+  <details class="analytics-controls" aria-label="Traffic intelligence controls">
+    <summary class="analytics-controls__summary">
+      <span class="analytics-controls__title">
+        <span class="dashboard-section-label">Traffic intelligence</span>
+        <strong>Visitor and redirect insights</strong>
+      </span>
+      <span class="analytics-range-label">{{ .Analytics.RangeLabel }}</span>
+      <span class="analytics-controls__meta">{{ .Analytics.Summary.PageViews }} page views · {{ .Analytics.Summary.RedirectEvents }} redirects</span>
+      <span class="analytics-controls__toggle" aria-hidden="true"></span>
+    </summary>
+    <div class="analytics-controls__body">
+      <p>Track website visits, app redirect decisions, referrers, device type, browser, operating system, and IP-derived fields from your own server.</p>
+      <form class="analytics-range" method="get" action="/admin/analytics">
+        <label>
+          <span>From</span>
+          <input name="from" type="date" value="{{ .Analytics.From }}">
+        </label>
+        <label>
+          <span>To</span>
+          <input name="to" type="date" value="{{ .Analytics.To }}">
+        </label>
+        <button class="analytics-action analytics-action--light" type="submit">Apply range</button>
+        <a class="primary-button button-link" href="/admin/analytics/export?type=redirects&from={{ .Analytics.From }}&to={{ .Analytics.To }}">Export CSV</a>
+      </form>
+      <form class="analytics-cleanup" method="post" action="/admin/analytics/cleanup">
+        <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+        <button class="analytics-action analytics-action--warning" type="submit">Run retention cleanup</button>
+        <small>Deletes analytics data older than {{ .Analytics.RetentionDays }} days.</small>
+      </form>
+    </div>
+  </details>
+
+  {{ if .Analytics.AnalyticsDisabled }}
+  <div class="settings-alert settings-alert--warning">Analytics are disabled. Existing data is still visible until retention cleanup removes it.</div>
+  {{ end }}
+  {{ if .Cleanup }}<div class="settings-alert">Expired analytics data cleaned up.</div>{{ end }}
+
+  <div class="analytics-stat-grid" aria-label="Analytics summary">
+    <article><span>Page views</span><strong>{{ .Analytics.Summary.PageViews }}</strong><small>Public HTML views</small></article>
+    <article><span>Redirect events</span><strong>{{ .Analytics.Summary.RedirectEvents }}</strong><small>App and short-link redirects</small></article>
+    <article><span>Sessions</span><strong>{{ .Analytics.Summary.Sessions }}</strong><small>First-party sessions</small></article>
+    <article><span>Estimated visitors</span><strong>{{ .Analytics.Summary.UniqueVisitors }}</strong><small>Approximate HMAC estimate</small></article>
+    <article><span>Bot sessions</span><strong>{{ .Analytics.Summary.BotSessions }}</strong><small>{{ if .Analytics.BotsExcluded }}Excluded from main totals{{ else }}Included in totals{{ end }}</small></article>
+    <article><span>App redirects</span><strong>{{ .Analytics.Summary.AndroidRedirects }} / {{ .Analytics.Summary.AppleRedirects }}</strong><small>Android / Apple</small></article>
+  </div>
+
+  <div class="analytics-grid">
+    <section class="analytics-panel" aria-labelledby="device-mix-title">
+      <div class="analytics-panel__header"><div><span class="dashboard-section-label">Device mix</span><h2 id="device-mix-title">Devices</h2></div></div>
+      {{ template "analytics/breakdown-list" .Analytics.DeviceRows }}
+    </section>
+    <section class="analytics-panel" aria-labelledby="platform-title">
+      <div class="analytics-panel__header"><div><span class="dashboard-section-label">Redirects</span><h2 id="platform-title">Destination platforms</h2></div></div>
+      {{ template "analytics/breakdown-list" .Analytics.PlatformRows }}
+    </section>
+    <section class="analytics-panel" aria-labelledby="os-title">
+      <div class="analytics-panel__header"><div><span class="dashboard-section-label">Device report</span><h2 id="os-title">Operating systems</h2></div></div>
+      {{ template "analytics/breakdown-list" .Analytics.OSRows }}
+    </section>
+    <section class="analytics-panel" aria-labelledby="browser-title">
+      <div class="analytics-panel__header"><div><span class="dashboard-section-label">Browser report</span><h2 id="browser-title">Browsers</h2></div></div>
+      {{ template "analytics/breakdown-list" .Analytics.BrowserRows }}
+    </section>
+    <section class="analytics-panel" aria-labelledby="referrer-title">
+      <div class="analytics-panel__header"><div><span class="dashboard-section-label">Acquisition</span><h2 id="referrer-title">Top referrers</h2></div></div>
+      {{ template "analytics/breakdown-list" .Analytics.ReferrerRows }}
+    </section>
+  </div>
+
+  <section class="analytics-panel analytics-panel--full" aria-labelledby="recent-redirects-title">
+    <div class="analytics-panel__header">
+      <div>
+        <span class="dashboard-section-label">Redirect log</span>
+        <h2 id="recent-redirects-title">Recent Android and iOS redirects</h2>
+      </div>
+    </div>
+    <div class="analytics-table-wrap">
+      <table class="analytics-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Route</th>
+            <th>Platform</th>
+            <th>IP network</th>
+            <th>IP hash</th>
+            <th>Device</th>
+            <th>OS</th>
+            <th>Browser</th>
+            <th>Referrer</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Analytics.RecentRedirects }}
+          <tr>
+            <td>{{ .Time }}</td>
+            <td>{{ .Route }}{{ if .Slug }}<small>{{ .Slug }}</small>{{ end }}</td>
+            <td><span class="audit-pill">{{ .Platform }}</span></td>
+            <td>{{ .IPNetwork }}</td>
+            <td><code>{{ .IPHashShort }}</code></td>
+            <td>{{ .Device }}</td>
+            <td>{{ .OS }}</td>
+            <td>{{ .Browser }}</td>
+            <td>{{ .Referrer }}</td>
+          </tr>
+          {{ else }}
+          <tr><td colspan="9" class="audit-empty">No redirects recorded for this date range yet.</td></tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+    <div class="analytics-pagination" aria-label="Redirect log pagination">
+      {{ if .Analytics.RedirectPagination.Total }}
+      <span>Showing {{ .Analytics.RedirectPagination.FromItem }}-{{ .Analytics.RedirectPagination.ToItem }} of {{ .Analytics.RedirectPagination.Total }} redirects</span>
+      <span>Page {{ .Analytics.RedirectPagination.Page }} of {{ .Analytics.RedirectPagination.TotalPages }}</span>
+      {{ else }}
+      <span>No redirects to paginate</span>
+      <span>Page 1 of 1</span>
+      {{ end }}
+      <div class="analytics-pagination__actions">
+        {{ if .Analytics.RedirectPagination.HasPrev }}
+        <a class="secondary-button button-link" href="{{ .Analytics.RedirectPagination.PrevURL }}">Previous</a>
+        {{ else }}
+        <span class="secondary-button button-link is-disabled" aria-disabled="true">Previous</span>
+        {{ end }}
+        {{ if .Analytics.RedirectPagination.HasNext }}
+        <a class="primary-button button-link" href="{{ .Analytics.RedirectPagination.NextURL }}">Next</a>
+        {{ else }}
+        <span class="primary-button button-link is-disabled" aria-disabled="true">Next</span>
+        {{ end }}
+      </div>
+    </div>
+  </section>
+</section>
+{{ template "admin/shell-end" . }}
+{{ template "public/page-end" . }}
+{{ end }}
+
+{{ define "analytics/breakdown-list" }}
+  {{ if . }}
+  <div class="analytics-breakdown">
+    {{ range . }}
+    <div>
+      <span>{{ .Label }}</span>
+      <strong>{{ .Count }}</strong>
+    </div>
+    {{ end }}
+  </div>
+  {{ else }}
+  <div class="analytics-empty">No data for this date range yet.</div>
+  {{ end }}
+{{ end }}

@@ -34,10 +34,12 @@ if [[ ! -f "${ENV_FILE}" ]]; then
   cat > "${ENV_FILE}" <<EOF
 APP_ENV=production
 APP_HOST=127.0.0.1
-APP_PORT=8080
+APP_PORT=8722
 DATABASE_PATH=/var/lib/ty2shorten/ty2shorten.db
+APP_CONFIG_PATH=/var/lib/ty2shorten/config.json
+MEDIA_STORAGE_PATH=/var/lib/ty2shorten/media
 SESSION_SECRET=${SESSION_SECRET}
-BASE_URL=https://app.thailegalprotection.com
+BASE_URL=https://app.phyowaiyan.com
 TRUSTED_PROXIES=127.0.0.1,::1
 APP_VERSION=production
 EOF

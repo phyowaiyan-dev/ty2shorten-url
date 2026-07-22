@@ -24,7 +24,9 @@
       </div>
       <progress class="readiness-progress" value="{{ .Dashboard.SetupScore }}" max="100">{{ .Dashboard.SetupScore }}%</progress>
       <div class="readiness-summary">
+        {{ if .Dashboard.MissingSetup }}
         <span><strong>{{ len .Dashboard.MissingSetup }}</strong> missing setup items</span>
+        {{ end }}
         <span><strong>{{ .Dashboard.ActiveShortLinks }}</strong> active links</span>
         <span><strong>{{ .Dashboard.AppEnv }}</strong> environment</span>
       </div>
@@ -34,6 +36,7 @@
       </div>
     </article>
 
+    {{ if .Dashboard.MissingSetup }}
     <article class="priority-card">
       <div class="dashboard-panel__header">
         <div>
@@ -41,7 +44,6 @@
           <h2>Next setup actions</h2>
         </div>
       </div>
-      {{ if .Dashboard.MissingSetup }}
       <div class="priority-list">
         {{ range .Dashboard.MissingSetup }}
         <a href="{{ .URL }}">
@@ -50,13 +52,8 @@
         </a>
         {{ end }}
       </div>
-      {{ else }}
-      <div class="missing-empty">
-        <strong>Everything important is configured.</strong>
-        <span>Review settings regularly as your public app experience changes.</span>
-      </div>
-      {{ end }}
     </article>
+    {{ end }}
   </div>
 
   <div class="dashboard-metrics" aria-label="Service status">
@@ -79,7 +76,7 @@
         <span>Short links</span>
         <strong>{{ .Dashboard.ActiveShortLinks }}</strong>
       </div>
-      <small>Live campaign destinations</small>
+      <small>Live redirect destinations</small>
     </article>
     <article class="dashboard-stat">
       <div>
@@ -119,6 +116,7 @@
       </div>
     </article>
 
+    {{ if .Dashboard.MissingSetup }}
     <article class="dashboard-panel setup-panel">
       <div class="dashboard-panel__header">
         <div>
@@ -138,6 +136,7 @@
         {{ end }}
       </div>
     </article>
+    {{ end }}
   </div>
 </section>
 {{ template "admin/shell-end" . }}

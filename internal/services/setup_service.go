@@ -108,14 +108,16 @@ func (s *SetupService) Complete(form SetupForm) error {
 		}
 
 		appSettings := &models.AppSetting{
-			SiteName:         normalized.SiteName,
-			SiteDescription:  normalized.SiteDescription,
-			AndroidURL:       normalized.AndroidURL,
-			AppleURL:         normalized.AppleURL,
-			DefaultURL:       normalized.DefaultURL,
-			PublicBaseURL:    normalized.PublicBaseURL,
-			SupportEmail:     normalized.SupportEmail,
-			IsSetupCompleted: true,
+			SiteName:           normalized.SiteName,
+			SiteDescription:    normalized.SiteDescription,
+			AndroidURL:         normalized.AndroidURL,
+			AppleURL:           normalized.AppleURL,
+			DefaultURL:         normalized.DefaultURL,
+			PublicBaseURL:      normalized.PublicBaseURL,
+			SupportEmail:       normalized.SupportEmail,
+			FrontendThemeColor: DefaultFrontendThemeColor,
+			AdminThemeColor:    DefaultAdminThemeColor,
+			IsSetupCompleted:   true,
 		}
 		if err := s.settings.CreateWithDB(tx, appSettings); err != nil {
 			return err

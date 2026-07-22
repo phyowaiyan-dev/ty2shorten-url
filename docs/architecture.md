@@ -53,5 +53,5 @@ Successful login writes a signed cookie containing the admin ID, expiry, and non
 Production is intended as:
 
 ```text
-Internet -> Apache TLS/reverse proxy -> 127.0.0.1:8080 -> Ty2Shorten binary -> SQLite file
+Internet -> Apache TLS/reverse proxy -> 127.0.0.1:8722 -> Ty2Shorten binary -> SQLite file
 ```

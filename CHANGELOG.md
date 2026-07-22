@@ -26,6 +26,7 @@ The format is based on Keep a Changelog, and this project intends to use Semanti
 - Configurable public footer.
 - Read-only audit-log list, filters, and detail pages.
 - Tailwind CSS and daisyUI build pipeline for embedded compiled CSS.
+- First-party analytics with visitor sessions, public page-view tracking, redirect-event tracking, Android/iOS redirect detail tables, IP network/hash fields, device/browser/OS inference, referrer summaries, date filtering, CSV export, admin settings, HMAC or network-only IP handling, session detail pages, and manual retention cleanup.
 
 ### Changed
 

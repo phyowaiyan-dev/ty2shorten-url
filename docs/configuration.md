@@ -39,7 +39,7 @@ APP_BUILD_TIME=unknown
 ```env
 APP_ENV=production
 APP_HOST=127.0.0.1
-APP_PORT=8080
+APP_PORT=8722
 DATABASE_PATH=/var/lib/ty2shorten/ty2shorten.db
 APP_CONFIG_PATH=/var/lib/ty2shorten/config.json
 MEDIA_STORAGE_PATH=/var/lib/ty2shorten/media

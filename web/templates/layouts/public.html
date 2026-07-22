@@ -10,8 +10,22 @@
   {{ with .SEO.Keywords }}<meta name="keywords" content="{{ . }}">{{ end }}
   {{ with .SEO.Robots }}<meta name="robots" content="{{ . }}">{{ end }}
   {{ with .SEO.CanonicalURL }}<link rel="canonical" href="{{ . }}">{{ end }}
-  {{ with .SEO.FaviconURL }}<link rel="icon" href="{{ . }}">{{ end }}
+  {{ if .AdminChrome }}
+  <link rel="icon" href="/assets/favicon.ico" sizes="any">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/assets/favicon-96x96.png" type="image/png" sizes="96x96">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/assets/site.webmanifest">
+  {{ else if .SEO.FaviconURL }}
+  <link rel="icon" href="{{ .SEO.FaviconURL }}">
   {{ with .SEO.AppleTouchIconURL }}<link rel="apple-touch-icon" href="{{ . }}">{{ end }}
+  {{ else }}
+  <link rel="icon" href="/assets/favicon.ico" sizes="any">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/assets/favicon-96x96.png" type="image/png" sizes="96x96">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/assets/site.webmanifest">
+  {{ end }}
   {{ with .SEO.OGType }}<meta property="og:type" content="{{ . }}">{{ end }}
   {{ with .SEO.OGTitle }}<meta property="og:title" content="{{ . }}">{{ end }}
   {{ with .SEO.OGDescription }}<meta property="og:description" content="{{ . }}">{{ end }}
@@ -26,7 +40,21 @@
   {{ with .SEO.TwitterSite }}<meta name="twitter:site" content="{{ . }}">{{ end }}
   {{ with .SEO.GoogleSiteVerification }}<meta name="google-site-verification" content="{{ . }}">{{ end }}
   {{ with .SEO.BingSiteVerification }}<meta name="msvalidate.01" content="{{ . }}">{{ end }}
-  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/css/app.css?v=20260722-store-cta">
+  {{ with .Theme }}
+  <style>
+    :root,
+    body {
+      --theme-primary: {{ .Primary }};
+      --theme-secondary: {{ .Secondary }};
+      --theme-primary-contrast: {{ .Contrast }};
+      --theme-primary-hover: color-mix(in srgb, {{ .Primary }} 86%, black);
+      --theme-primary-soft: color-mix(in srgb, {{ .Primary }} 10%, white);
+      --theme-primary-border: color-mix(in srgb, {{ .Primary }} 28%, white);
+      --theme-primary-muted: color-mix(in srgb, {{ .Primary }} 76%, #64748b);
+    }
+  </style>
+  {{ end }}
   {{ with .SEO.StructuredData }}<script type="application/ld+json">{{ . }}</script>{{ end }}
 </head>
 <body>
@@ -34,15 +62,17 @@
 {{ with .PublicChrome }}
   {{ if .Enabled }}
     <header class="public-appbar">
-      <a class="public-brand" href="/" aria-label="{{ .SiteName }} home">
-        {{ if .LogoURL }}<img class="brand-logo" src="{{ .LogoURL }}" alt="{{ .SiteName }} logo">{{ else }}<span class="public-brand__mark" aria-hidden="true">{{ .Initial }}</span>{{ end }}
-        <span>{{ .SiteName }}</span>
-      </a>
-      <nav class="public-nav" aria-label="Primary navigation">
-        <a href="/get">Get the app</a>
-        <a href="{{ .PrivacyURL }}">Privacy</a>
-        <a href="{{ .TermsURL }}">Terms</a>
-      </nav>
+      <div class="public-appbar__inner">
+        <a class="public-brand" href="/" aria-label="{{ .SiteName }} home">
+          {{ if .LogoURL }}<img class="brand-logo" src="{{ .LogoURL }}" alt="{{ .SiteName }} logo">{{ else }}<span class="public-brand__mark" aria-hidden="true">{{ .Initial }}</span>{{ end }}
+          <span>{{ .SiteName }}</span>
+        </a>
+        <nav class="public-nav" aria-label="Primary navigation">
+          <a href="/get">Get the app</a>
+          <a href="{{ .PrivacyURL }}">Privacy</a>
+          <a href="{{ .TermsURL }}">Terms</a>
+        </nav>
+      </div>
     </header>
   {{ end }}
 {{ end }}

@@ -95,6 +95,18 @@ func NoIndex(title string) SEOView {
 	return SEOView{Title: title, Robots: "noindex, nofollow"}
 }
 
+// NoIndexWithBrand returns noindex metadata while preserving public branding icons.
+func NoIndexWithBrand(title string, settings *models.AppSetting) SEOView {
+	view := NoIndex(title)
+	if settings == nil {
+		return view
+	}
+	base := normalizedBase(settings)
+	view.FaviconURL = absoluteURL(base, settings.FaviconURL)
+	view.AppleTouchIconURL = absoluteURL(base, settings.AppleTouchIconURL)
+	return view
+}
+
 // Robots returns dynamic robots.txt content and status.
 func (s *SEOService) Robots() (string, error) {
 	settings, err := s.settings.Current()

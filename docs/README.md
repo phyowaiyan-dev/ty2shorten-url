@@ -23,6 +23,7 @@ This directory contains project and operations documentation for Ty2Shorten URL.
 - [Database](database.md): SQLite behavior, schema, WAL, backups, and migrations.
 - [Security](security.md): implemented controls and known limitations.
 - [Testing](testing.md): automated checks and manual smoke tests.
+- [AWS Ubuntu Apache setup](aws-ubuntu-apache-setup.md): full VPS deployment tutorial for SQLite and MySQL.
 - [Deployment](deployment.md): Ubuntu deployment flow.
 - [Apache](apache.md): reverse-proxy configuration and headers.
 - [systemd](systemd.md): service file and hardening.

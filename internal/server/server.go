@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	builtInAssets "github.com/phyowaiyan-dev/ty2shorten-url/assets"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/config"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/middleware"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/repositories"
@@ -84,6 +85,7 @@ func NewRouter(deps Dependencies) (*gin.Engine, error) {
 		return nil, fmt.Errorf("load embedded static assets: %w", err)
 	}
 	router.StaticFS("/static", http.FS(staticFiles))
+	router.StaticFS("/assets", http.FS(builtInAssets.FS))
 
 	sessions := session.NewManager(deps.Config.SessionSecret, deps.Config.IsProduction())
 	if deps.BootstrapMode || deps.DB == nil {
@@ -98,6 +100,7 @@ func NewRouter(deps Dependencies) (*gin.Engine, error) {
 	settings := repositories.NewSettingsRepository(deps.DB)
 	shortLinks := repositories.NewShortLinkRepository(deps.DB)
 	audits := repositories.NewAuditRepository(deps.DB)
+	analyticsRepo := repositories.NewAnalyticsRepository(deps.DB)
 	setupService := services.NewSetupService(deps.DB, admins, settings, deps.Config.IsProduction(), deps.Config.BaseURL)
 	authService := services.NewAuthService(admins, services.NewMemoryLoginLimiter(5, 15*time.Minute), deps.Logger)
 	settingsService := services.NewSettingsService(settings, deps.Config.IsProduction(), deps.Logger)
@@ -108,8 +111,10 @@ func NewRouter(deps Dependencies) (*gin.Engine, error) {
 	dashboardService := services.NewDashboardService(settings, shortLinks, deps.Config.AppEnv)
 	redirectService := services.NewRedirectService(settings, shortLinks, deps.Logger)
 	seoService := services.NewSEOService(settings)
+	analyticsService := services.NewAnalyticsService(analyticsRepo, settings, deps.Config.IsProduction(), deps.Config.SessionSecret, deps.Logger)
 
 	router.Use(middleware.SetupGate(setupService))
+	router.Use(middleware.Analytics(analyticsService))
 	RegisterRoutes(router, RouteDependencies{
 		DB:           deps.DB,
 		Logger:       deps.Logger,
@@ -127,6 +132,7 @@ func NewRouter(deps Dependencies) (*gin.Engine, error) {
 		Dashboard:    dashboardService,
 		Redirects:    redirectService,
 		SEO:          seoService,
+		Analytics:    analyticsService,
 		Sessions:     sessions,
 		CSRFHandler:  middleware.CSRFRequired(sessions),
 		AuthHandler:  middleware.AuthRequired(sessions),
@@ -145,7 +151,22 @@ func Shutdown(ctx context.Context, srv *http.Server) error {
 }
 
 func parseTemplates() (*template.Template, error) {
-	tmpl, err := template.ParseFS(web.FS, "templates/layouts/*.html", "templates/public/*.html")
+	tmpl, err := template.New("").Funcs(template.FuncMap{
+		"dict": func(values ...any) (map[string]any, error) {
+			if len(values)%2 != 0 {
+				return nil, fmt.Errorf("dict requires key/value pairs")
+			}
+			out := map[string]any{}
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, fmt.Errorf("dict keys must be strings")
+				}
+				out[key] = values[i+1]
+			}
+			return out, nil
+		},
+	}).ParseFS(web.FS, "templates/layouts/*.html", "templates/public/*.html")
 	if err != nil {
 		return nil, fmt.Errorf("parse embedded templates: %w", err)
 	}

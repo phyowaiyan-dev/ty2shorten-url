@@ -4,7 +4,7 @@
   <aside class="admin-sidebar" data-sidebar="sidebar" aria-label="Admin sidebar">
     <div class="admin-sidebar__header">
       <a class="admin-brand" href="/admin/about" {{ if eq .Title "About Project" }}aria-current="page"{{ end }}>
-        <span class="admin-brand__mark" aria-hidden="true">T</span>
+        <img class="admin-brand__logo" src="/assets/web-app-manifest-192x192.png" alt="" aria-hidden="true">
         <span>
           <strong>ty2shorten-url</strong>
           <small>Admin console</small>
@@ -18,7 +18,7 @@
         <nav class="admin-nav" aria-label="Platform navigation">
           <a href="/admin" {{ if eq .Title "Admin dashboard" }}aria-current="page"{{ end }}><span aria-hidden="true">D</span>Dashboard</a>
           <a href="/admin/links" {{ if or (eq .Title "Short links") (eq .Title "New short link") (eq .Title "Edit short link") }}aria-current="page"{{ end }}><span aria-hidden="true">L</span>Short Links</a>
-          <a href="/admin/audit-logs" {{ if or (eq .Title "Audit Logs") (eq .Title "Audit Log Detail") }}aria-current="page"{{ end }}><span aria-hidden="true">A</span>Audit Logs</a>
+          <a href="/admin/analytics" {{ if or (eq .Title "Analytics") (eq .Title "Analytics Session") }}aria-current="page"{{ end }}><span aria-hidden="true">N</span>Analytics</a>
         </nav>
       </section>
 
@@ -30,6 +30,8 @@
           <a href="/admin/settings/seo" {{ if eq .Title "SEO Settings" }}aria-current="page"{{ end }}><span aria-hidden="true">S</span>SEO</a>
           <a href="/admin/settings/footer" {{ if eq .Title "Footer Settings" }}aria-current="page"{{ end }}><span aria-hidden="true">F</span>Footer</a>
           <a href="/admin/settings/legal" {{ if eq .Title "Legal Content" }}aria-current="page"{{ end }}><span aria-hidden="true">P</span>Legal</a>
+          <a href="/admin/settings/analytics" {{ if eq .Title "Analytics Settings" }}aria-current="page"{{ end }}><span aria-hidden="true">Y</span>Analytics</a>
+          <a href="/admin/audit-logs" {{ if or (eq .Title "Audit Logs") (eq .Title "Audit Log Detail") }}aria-current="page"{{ end }}><span aria-hidden="true">A</span>Audit Logs</a>
         </nav>
       </section>
     </div>
@@ -47,17 +49,19 @@
 
   <section class="admin-inset" data-sidebar="inset">
     <header class="admin-topbar">
-      <button class="admin-sidebar-trigger" type="button" data-sidebar="trigger" data-sidebar-trigger aria-label="Toggle admin navigation">
-        <span aria-hidden="true"></span>
-      </button>
-      <div class="admin-breadcrumbs" aria-label="Breadcrumb">
-        <span>Admin</span>
-        <span>{{ .Title }}</span>
+      <div class="admin-topbar__inner">
+        <button class="admin-sidebar-trigger" type="button" data-sidebar="trigger" data-sidebar-trigger aria-label="Toggle admin navigation">
+          <span aria-hidden="true"></span>
+        </button>
+        <div class="admin-breadcrumbs" aria-label="Breadcrumb">
+          <span>Admin</span>
+          <span>{{ .Title }}</span>
+        </div>
+        <form method="post" action="/admin/logout">
+          <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
+          <button class="admin-topbar__logout" type="submit">Sign out</button>
+        </form>
       </div>
-      <form method="post" action="/admin/logout">
-        <input type="hidden" name="csrf_token" value="{{ .CSRFToken }}">
-        <button class="admin-topbar__logout" type="submit">Sign out</button>
-      </form>
     </header>
     <div class="admin-content">
 {{ end }}

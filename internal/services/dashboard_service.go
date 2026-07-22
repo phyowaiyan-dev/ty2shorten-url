@@ -155,7 +155,7 @@ func setupTasks(settings *models.AppSetting, activeShortLinks int64) []SetupTask
 		},
 		{
 			Label:       "Short link inventory",
-			Description: "Create at least one active short link for campaign routing.",
+			Description: "Create at least one active short link for managed redirects.",
 			URL:         "/admin/links/new",
 			Complete:    activeShortLinks > 0,
 		},

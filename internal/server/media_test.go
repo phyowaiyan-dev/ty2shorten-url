@@ -114,9 +114,61 @@ func TestBrandingSettingsPageShowsUploadCards(t *testing.T) {
 			t.Fatalf("expected branding UI marker %q, got: %s", want, body)
 		}
 	}
-	for _, removed := range []string{"Logo URL", "Dark logo URL", "Favicon URL", "Apple touch icon URL", "Social image URL"} {
+	for _, removed := range []string{
+		"Logo URL",
+		"Dark logo URL",
+		"Favicon URL",
+		"Apple touch icon URL",
+		"Social image URL",
+		"Project-wide color system",
+		"Project theme color",
+		"data-theme-preset",
+		`formaction="/admin/settings/branding/theme"`,
+		"theme-swatch",
+		"Manual hex color",
+	} {
 		if strings.Contains(body, removed) {
 			t.Fatalf("expected visible URL field %q to be removed, got: %s", removed, body)
+		}
+	}
+}
+
+func TestLogoThemeIgnoresSavedThemeSettings(t *testing.T) {
+	app := newRouteTestApp(t)
+	seedConfiguredApp(t, app.db)
+	app.login(t)
+
+	if err := app.db.Model(&models.AppSetting{}).Where("1 = 1").Updates(map[string]any{
+		"frontend_theme_color": "#e11d48",
+		"admin_theme_color":    "#d97706",
+	}).Error; err != nil {
+		t.Fatalf("seed old theme colors: %v", err)
+	}
+
+	branding := app.do(t, http.MethodGet, "/admin/settings/branding?saved=1", nil, nil)
+	assertStatus(t, branding, http.StatusOK)
+	if !strings.Contains(branding.Body.String(), `--theme-primary: #0ea5e9`) {
+		t.Fatalf("expected fixed logo theme on branding page, got: %s", branding.Body.String())
+	}
+
+	public := app.do(t, http.MethodGet, "/", nil, nil)
+	assertStatus(t, public, http.StatusOK)
+	if !strings.Contains(public.Body.String(), `--theme-primary: #0ea5e9`) {
+		t.Fatalf("expected fixed logo theme on public page, got: %s", public.Body.String())
+	}
+
+	for _, path := range []string{
+		"/admin",
+		"/admin/settings",
+		"/admin/settings/seo",
+		"/admin/settings/footer",
+		"/admin/settings/analytics",
+		"/admin/audit-logs",
+	} {
+		admin := app.do(t, http.MethodGet, path, nil, nil)
+		assertStatus(t, admin, http.StatusOK)
+		if !strings.Contains(admin.Body.String(), `--theme-primary: #0ea5e9`) {
+			t.Fatalf("expected fixed logo theme on %s, got: %s", path, admin.Body.String())
 		}
 	}
 }
@@ -159,9 +211,45 @@ func TestBrandingURLsRenderOnPublicPages(t *testing.T) {
 	recorder := app.do(t, http.MethodGet, "/", nil, nil)
 	assertStatus(t, recorder, http.StatusOK)
 	body := recorder.Body.String()
-	for _, want := range []string{`<link rel="icon" href="http://localhost:8722/media/favicon.png">`, `<img class="brand-logo" src="/media/logo.png"`, `property="og:image" content="http://localhost:8722/media/social.png"`} {
+	for _, want := range []string{
+		`<link rel="icon" href="http://localhost:8722/media/favicon.png">`,
+		`<img class="brand-logo" src="/media/logo.png"`,
+		`<img class="hero-logo" src="/media/logo.png"`,
+		`property="og:image" content="http://localhost:8722/media/social.png"`,
+	} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("expected %q in public page, got: %s", want, body)
+		}
+	}
+	if strings.Contains(body, `/assets/favicon.ico`) {
+		t.Fatalf("public page should prefer uploaded favicon over built-in favicon, got: %s", body)
+	}
+
+	recorder = app.do(t, http.MethodGet, "/privacy", nil, nil)
+	assertStatus(t, recorder, http.StatusOK)
+	if !strings.Contains(recorder.Body.String(), `<link rel="icon" href="http://localhost:8722/media/favicon.png">`) {
+		t.Fatalf("expected uploaded favicon on public legal page, got: %s", recorder.Body.String())
+	}
+}
+
+func TestPublicBrandingFallsBackToBuiltInAssets(t *testing.T) {
+	app := newRouteTestApp(t)
+	seedConfiguredApp(t, app.db)
+
+	recorder := app.do(t, http.MethodGet, "/", nil, nil)
+	assertStatus(t, recorder, http.StatusOK)
+	body := recorder.Body.String()
+	for _, want := range []string{
+		`<link rel="icon" href="/assets/favicon.ico" sizes="any">`,
+		`<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">`,
+		`<link rel="icon" href="/assets/favicon-96x96.png" type="image/png" sizes="96x96">`,
+		`<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">`,
+		`<link rel="manifest" href="/assets/site.webmanifest">`,
+		`<img class="brand-logo" src="/assets/web-app-manifest-192x192.png"`,
+		`<img class="hero-logo" src="/assets/web-app-manifest-192x192.png"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("expected built-in branding marker %q, got: %s", want, body)
 		}
 	}
 }

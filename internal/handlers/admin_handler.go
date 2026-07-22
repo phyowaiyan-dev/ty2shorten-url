@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -21,6 +23,7 @@ type AdminHandler struct {
 	account   *services.AccountService
 	audit     *services.AuditService
 	media     *services.MediaService
+	analytics *services.AnalyticsService
 	session   *session.Manager
 }
 
@@ -37,8 +40,8 @@ type auditLogRow struct {
 }
 
 // NewAdminHandler constructs an AdminHandler.
-func NewAdminHandler(dashboard *services.DashboardService, settings *services.SettingsService, links *services.LinkService, account *services.AccountService, audit *services.AuditService, media *services.MediaService, sessions *session.Manager) *AdminHandler {
-	return &AdminHandler{dashboard: dashboard, settings: settings, links: links, account: account, audit: audit, media: media, session: sessions}
+func NewAdminHandler(dashboard *services.DashboardService, settings *services.SettingsService, links *services.LinkService, account *services.AccountService, audit *services.AuditService, media *services.MediaService, analytics *services.AnalyticsService, sessions *session.Manager) *AdminHandler {
+	return &AdminHandler{dashboard: dashboard, settings: settings, links: links, account: account, audit: audit, media: media, analytics: analytics, session: sessions}
 }
 
 // Dashboard renders the initial administrator dashboard.
@@ -138,22 +141,24 @@ func (h *AdminHandler) UpdateBrandingSettings(c *gin.Context) {
 		{field: "apple_touch_icon_file", kind: "apple_icon", set: func(value string) { form.AppleTouchIconURL = value }},
 		{field: "default_social_image_file", kind: "social_image", set: func(value string) { form.DefaultSocialImageURL = value }},
 	}
-	for _, upload := range uploads {
-		header, err := c.FormFile(upload.field)
-		if err != nil {
-			if errors.Is(err, http.ErrMissingFile) {
+	if strings.HasPrefix(c.ContentType(), "multipart/") {
+		for _, upload := range uploads {
+			header, err := c.FormFile(upload.field)
+			if err != nil {
+				if errors.Is(err, http.ErrMissingFile) {
+					continue
+				}
+				fieldErrors[upload.field] = "Upload could not be read."
 				continue
 			}
-			fieldErrors[upload.field] = "Upload could not be read."
-			continue
-		}
-		url, err := h.media.Save(upload.kind, header)
-		if err != nil {
-			fieldErrors[upload.field] = mediaErrorMessage(err)
-			continue
-		}
-		if url != "" {
-			upload.set(url)
+			url, err := h.media.Save(upload.kind, header)
+			if err != nil {
+				fieldErrors[upload.field] = mediaErrorMessage(err)
+				continue
+			}
+			if url != "" {
+				upload.set(url)
+			}
 		}
 	}
 	if len(fieldErrors) > 0 {
@@ -280,22 +285,24 @@ func (h *AdminHandler) UpdateSEOSettings(c *gin.Context) {
 		{field: "twitter_default_image_file", kind: "twitter_image", set: func(value string) { form.TwitterDefaultImageURL = value }},
 		{field: "organization_logo_file", kind: "organization_logo", set: func(value string) { form.OrganizationLogoURL = value }},
 	}
-	for _, upload := range uploads {
-		header, err := c.FormFile(upload.field)
-		if err != nil {
-			if errors.Is(err, http.ErrMissingFile) {
+	if strings.HasPrefix(c.ContentType(), "multipart/") {
+		for _, upload := range uploads {
+			header, err := c.FormFile(upload.field)
+			if err != nil {
+				if errors.Is(err, http.ErrMissingFile) {
+					continue
+				}
+				fieldErrors[upload.field] = "Upload could not be read."
 				continue
 			}
-			fieldErrors[upload.field] = "Upload could not be read."
-			continue
-		}
-		url, err := h.media.Save(upload.kind, header)
-		if err != nil {
-			fieldErrors[upload.field] = mediaErrorMessage(err)
-			continue
-		}
-		if url != "" {
-			upload.set(url)
+			url, err := h.media.Save(upload.kind, header)
+			if err != nil {
+				fieldErrors[upload.field] = mediaErrorMessage(err)
+				continue
+			}
+			if url != "" {
+				upload.set(url)
+			}
 		}
 	}
 	if len(fieldErrors) > 0 {
@@ -536,6 +543,152 @@ func (h *AdminHandler) AuditLogDetail(c *gin.Context) {
 	}))
 }
 
+// Analytics renders the administrator analytics dashboard.
+func (h *AdminHandler) Analytics(c *gin.Context) {
+	overview, err := h.analytics.Overview(c.Query("from"), c.Query("to"), c.Query("redirect_page"))
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Analytics unavailable", "Analytics data could not be loaded."))
+		return
+	}
+	csrfToken, err := h.session.CSRFToken(c)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Analytics unavailable", "A secure form token could not be created."))
+		return
+	}
+	c.HTML(http.StatusOK, "public/analytics.html", h.withAdmin(c, gin.H{
+		"Title":     "Analytics",
+		"Analytics": overview,
+		"CSRFToken": csrfToken,
+		"Cleanup":   c.Query("cleanup") == "1",
+	}))
+}
+
+// ExportAnalytics streams a privacy-aware CSV export.
+func (h *AdminHandler) ExportAnalytics(c *gin.Context) {
+	if c.Query("type") != "" && c.Query("type") != "redirects" {
+		c.HTML(http.StatusBadRequest, "public/error.html", errorView("Export unavailable", "Only redirect analytics export is available."))
+		return
+	}
+	filename := fmt.Sprintf("ty2-redirect-analytics-%s.csv", time.Now().Local().Format("20060102-150405"))
+	c.Header("Content-Type", "text/csv; charset=utf-8")
+	c.Header("Content-Disposition", `attachment; filename="`+filename+`"`)
+	if err := h.analytics.ExportRedirectsCSV(c.Writer, c.Query("from"), c.Query("to")); err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	_ = h.audit.Record(services.AuditEvent{
+		Action:       "analytics.exported",
+		ResourceType: "analytics",
+		Summary:      "Analytics CSV export generated",
+		IPAddress:    c.ClientIP(),
+		UserAgent:    c.GetHeader("User-Agent"),
+		RequestID:    requestID(c),
+	})
+}
+
+// AnalyticsSessionDetail renders one privacy-safe analytics session detail.
+func (h *AdminHandler) AnalyticsSessionDetail(c *gin.Context) {
+	detail, err := h.analytics.SessionDetail(c.Param("session_id"))
+	if err != nil {
+		if errors.Is(err, services.ErrAnalyticsSessionNotFound) {
+			c.HTML(http.StatusNotFound, "public/not_found.html", notFoundView("Session not found", "That analytics session could not be found."))
+			return
+		}
+		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Analytics session unavailable", "Analytics session details could not be loaded."))
+		return
+	}
+	csrfToken, err := h.session.CSRFToken(c)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Analytics session unavailable", "A secure form token could not be created."))
+		return
+	}
+	c.HTML(http.StatusOK, "public/analytics_session.html", h.withAdmin(c, gin.H{
+		"Title":     "Analytics Session",
+		"Session":   detail,
+		"CSRFToken": csrfToken,
+	}))
+}
+
+// CleanupAnalytics deletes expired analytics rows according to retention settings.
+func (h *AdminHandler) CleanupAnalytics(c *gin.Context) {
+	summary, err := h.analytics.CleanupExpired(false)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Cleanup failed", "Expired analytics data could not be cleaned up."))
+		return
+	}
+	_ = h.audit.Record(services.AuditEvent{
+		Action:       "analytics.cleanup.run",
+		ResourceType: "analytics",
+		Summary:      "Analytics retention cleanup run",
+		Metadata: map[string]any{
+			"page_views":      summary.PageViews,
+			"redirect_events": summary.RedirectEvents,
+			"sessions":        summary.Sessions,
+		},
+		IPAddress: c.ClientIP(),
+		UserAgent: c.GetHeader("User-Agent"),
+		RequestID: requestID(c),
+	})
+	c.Redirect(http.StatusSeeOther, "/admin/analytics?cleanup=1")
+}
+
+// AnalyticsSettings renders editable analytics settings.
+func (h *AdminHandler) AnalyticsSettings(c *gin.Context) {
+	form, err := h.analytics.SettingsForm()
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Analytics settings unavailable", "Analytics settings could not be loaded."))
+		return
+	}
+	h.renderAnalyticsSettings(c, http.StatusOK, form, nil, c.Query("saved") == "1")
+}
+
+// UpdateAnalyticsSettings validates and stores analytics settings.
+func (h *AdminHandler) UpdateAnalyticsSettings(c *gin.Context) {
+	form := services.AnalyticsSettingsForm{
+		AnalyticsEnabled:               c.PostForm("analytics_enabled") == "1",
+		PageViewTrackingEnabled:        c.PostForm("page_view_tracking_enabled") == "1",
+		RedirectTrackingEnabled:        c.PostForm("redirect_tracking_enabled") == "1",
+		BotTrackingEnabled:             c.PostForm("bot_tracking_enabled") == "1",
+		ExcludeBotsFromDashboard:       c.PostForm("exclude_bots_from_dashboard") == "1",
+		UniqueVisitorEstimationEnabled: c.PostForm("unique_visitor_estimation_enabled") == "1",
+		IPHandlingMode:                 c.PostForm("ip_handling_mode"),
+		RawUserAgentStorageEnabled:     c.PostForm("raw_user_agent_storage_enabled") == "1",
+		ReferrerTrackingEnabled:        c.PostForm("referrer_tracking_enabled") == "1",
+		UTMTrackingEnabled:             false,
+		ClientSideDeviceDetailsEnabled: c.PostForm("client_side_device_details_enabled") == "1",
+		GeolocationEnrichmentEnabled:   c.PostForm("geolocation_enrichment_enabled") == "1",
+		CookieConsentRequired:          c.PostForm("cookie_consent_required") == "1",
+		SessionCookieLifetimeDays:      atoiDefault(c.PostForm("session_cookie_lifetime_days"), 30),
+		DataRetentionDays:              atoiDefault(c.PostForm("data_retention_days"), 90),
+		AutomaticCleanupEnabled:        c.PostForm("automatic_cleanup_enabled") == "1",
+		AnalyticsExportEnabled:         c.PostForm("analytics_export_enabled") == "1",
+		RespectDoNotTrack:              c.PostForm("respect_do_not_track") == "1",
+		RespectGlobalPrivacyControl:    c.PostForm("respect_global_privacy_control") == "1",
+		AdminIPExclusionList:           c.PostForm("admin_ip_exclusion_list"),
+		InternalTrafficExclusionCIDRs:  c.PostForm("internal_traffic_exclusion_cidrs"),
+		QueryParameterAllowlist:        c.PostForm("query_parameter_allowlist"),
+		QueryParameterDenylist:         c.PostForm("query_parameter_denylist"),
+	}
+	if err := h.analytics.UpdateSettings(form); err != nil {
+		var validationErr services.SettingsValidationError
+		if errors.As(err, &validationErr) {
+			h.renderAnalyticsSettings(c, http.StatusUnprocessableEntity, form, validationErr.FieldErrors, false)
+			return
+		}
+		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Analytics settings not saved", "Analytics settings could not be saved."))
+		return
+	}
+	_ = h.audit.Record(services.AuditEvent{
+		Action:       "analytics.settings.updated",
+		ResourceType: "settings",
+		Summary:      "Analytics settings updated",
+		IPAddress:    c.ClientIP(),
+		UserAgent:    c.GetHeader("User-Agent"),
+		RequestID:    requestID(c),
+	})
+	c.Redirect(http.StatusSeeOther, "/admin/settings/analytics?saved=1")
+}
+
 // ChangePassword validates and stores a new administrator password.
 func (h *AdminHandler) ChangePassword(c *gin.Context) {
 	adminID, ok := h.session.AdminID(c)
@@ -624,6 +777,18 @@ func (h *AdminHandler) renderSEOSettings(c *gin.Context, status int, form servic
 	c.HTML(status, "public/seo_settings.html", h.withAdmin(c, gin.H{"Title": "SEO Settings", "Form": form, "FieldErrors": fieldErrors, "CSRFToken": csrfToken, "Saved": saved}))
 }
 
+func (h *AdminHandler) renderAnalyticsSettings(c *gin.Context, status int, form services.AnalyticsSettingsForm, fieldErrors map[string]string, saved bool) {
+	csrfToken, err := h.session.CSRFToken(c)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Analytics settings unavailable", "A secure form token could not be created."))
+		return
+	}
+	if fieldErrors == nil {
+		fieldErrors = map[string]string{}
+	}
+	c.HTML(status, "public/analytics_settings.html", h.withAdmin(c, gin.H{"Title": "Analytics Settings", "Form": form, "FieldErrors": fieldErrors, "CSRFToken": csrfToken, "Saved": saved}))
+}
+
 func (h *AdminHandler) renderLinkForm(c *gin.Context, status int, title, action string, form services.LinkForm, fieldErrors map[string]string) {
 	csrfToken, err := h.session.CSRFToken(c)
 	if err != nil {
@@ -656,6 +821,14 @@ func (h *AdminHandler) renderAccount(c *gin.Context, status int, fieldErrors map
 func (h *AdminHandler) withAdmin(c *gin.Context, data gin.H) gin.H {
 	if data == nil {
 		data = gin.H{}
+	}
+	data["AdminChrome"] = true
+	if _, exists := data["Theme"]; !exists {
+		if theme, err := h.settings.CurrentAdminTheme(); err == nil {
+			data["Theme"] = theme
+		} else {
+			data["Theme"] = services.AdminTheme(nil)
+		}
 	}
 	if _, exists := data["CurrentAdmin"]; exists {
 		return data
@@ -783,4 +956,12 @@ func shortenAuditRequestID(value string) string {
 		return value
 	}
 	return value[:12]
+}
+
+func atoiDefault(value string, fallback int) int {
+	parsed, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }

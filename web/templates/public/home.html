@@ -5,27 +5,18 @@
     <div class="public-hero__content">
       <div class="public-hero__copy">
         {{ if .LogoURL }}<img class="hero-logo" src="{{ .LogoURL }}" alt="{{ .SiteName }} logo">{{ end }}
-        <p class="landing__eyebrow">Mobile redirect service</p>
+        <p class="landing__eyebrow">Mobile redirect service edited</p>
         <h1 id="landing-title">{{ .SiteName }}</h1>
         {{ with .SiteTagline }}<p class="landing__tagline">{{ . }}</p>{{ end }}
         <p class="landing__description">{{ .SiteDescription }}</p>
         <div class="store-actions" aria-label="App download links">
           {{ if .AndroidURL }}
-          <a class="store-button store-button--android" href="/android">
-            <span class="store-button__label">Android</span>
-            <span class="store-button__meta">Google Play</span>
-          </a>
+          <a class="store-link-button store-link-button--primary" href="/android">Google Play</a>
           {{ end }}
           {{ if .AppleURL }}
-          <a class="store-button store-button--apple" href="/apple">
-            <span class="store-button__label">Apple</span>
-            <span class="store-button__meta">App Store</span>
-          </a>
+          <a class="store-link-button store-link-button--dark" href="/apple">iOS App Store</a>
           {{ end }}
-          <a class="store-button store-button--get" href="/get">
-            <span class="store-button__label">Auto-detect</span>
-            <span class="store-button__meta">Open the right store</span>
-          </a>
+          <a class="store-link-button store-link-button--light" href="/get">Auto-detect</a>
         </div>
       </div>
 

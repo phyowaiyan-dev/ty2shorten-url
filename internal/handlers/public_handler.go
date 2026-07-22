@@ -12,10 +12,13 @@ import (
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/models"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/repositories"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/services"
+	"github.com/phyowaiyan-dev/ty2shorten-url/internal/session"
 	"github.com/phyowaiyan-dev/ty2shorten-url/internal/validation"
 	qrcode "github.com/skip2/go-qrcode"
 	"gorm.io/gorm"
 )
+
+const defaultPublicLogoURL = "/assets/web-app-manifest-192x192.png"
 
 // PublicHandler serves unauthenticated public routes.
 type PublicHandler struct {
@@ -23,14 +26,16 @@ type PublicHandler struct {
 	settings  *repositories.SettingsRepository
 	seo       *services.SEOService
 	logger    *slog.Logger
+	analytics *services.AnalyticsService
+	sessions  *session.Manager
 	version   string
 	commit    string
 	buildTime string
 }
 
 // NewPublicHandler constructs a PublicHandler.
-func NewPublicHandler(db *gorm.DB, settings *repositories.SettingsRepository, seo *services.SEOService, logger *slog.Logger, version string, commit string, buildTime string) *PublicHandler {
-	return &PublicHandler{db: db, settings: settings, seo: seo, logger: logger, version: version, commit: commit, buildTime: buildTime}
+func NewPublicHandler(db *gorm.DB, settings *repositories.SettingsRepository, seo *services.SEOService, analytics *services.AnalyticsService, sessions *session.Manager, logger *slog.Logger, version string, commit string, buildTime string) *PublicHandler {
+	return &PublicHandler{db: db, settings: settings, seo: seo, analytics: analytics, sessions: sessions, logger: logger, version: version, commit: commit, buildTime: buildTime}
 }
 
 // Home renders the public landing page.
@@ -58,7 +63,7 @@ func (h *PublicHandler) Home(c *gin.Context) {
 		"SiteName":        settings.SiteName,
 		"SiteTagline":     settings.SiteTagline,
 		"SiteDescription": settings.SiteDescription,
-		"LogoURL":         settings.LogoURL,
+		"LogoURL":         publicLogoURL(settings),
 		"AndroidURL":      settings.AndroidURL,
 		"AppleURL":        settings.AppleURL,
 		"DefaultURL":      settings.DefaultURL,
@@ -66,6 +71,7 @@ func (h *PublicHandler) Home(c *gin.Context) {
 		"GetURL":          getURL,
 		"QRCode":          template.URL(qrDataURI),
 		"SEO":             h.seo.Home(settings),
+		"Theme":           services.FrontendTheme(settings),
 		"PublicChrome":    publicChrome(settings),
 		"Footer":          publicFooter(settings),
 	})
@@ -126,10 +132,17 @@ func publicChrome(settings *models.AppSetting) gin.H {
 		"Enabled":    true,
 		"SiteName":   siteName,
 		"Initial":    firstInitial(siteName),
-		"LogoURL":    settings.LogoURL,
+		"LogoURL":    publicLogoURL(settings),
 		"PrivacyURL": "/privacy",
 		"TermsURL":   "/terms",
 	}
+}
+
+func publicLogoURL(settings *models.AppSetting) string {
+	if settings == nil {
+		return defaultPublicLogoURL
+	}
+	return firstNonEmpty(settings.LogoURL, defaultPublicLogoURL)
 }
 
 func publicFooter(settings *models.AppSetting) gin.H {
@@ -166,7 +179,7 @@ func (h *PublicHandler) Placeholder(c *gin.Context) {
 
 	markdown := markdownField(settings)
 	configured := strings.TrimSpace(markdown) != ""
-	message := "This content is managed by the administrator."
+	message := ""
 	if !configured {
 		message = "This page has not been configured yet."
 	}
@@ -176,8 +189,10 @@ func (h *PublicHandler) Placeholder(c *gin.Context) {
 		"Message":      message,
 		"Configured":   configured,
 		"Content":      renderAboutMarkdown(markdown),
-		"SEO":          services.NoIndex(title),
+		"SEO":          services.NoIndexWithBrand(title, settings),
+		"Theme":        services.FrontendTheme(settings),
 		"PublicChrome": publicChrome(settings),
+		"CSRFToken":    csrfTokenOrEmpty(h.sessions, c),
 	})
 }
 
@@ -186,6 +201,19 @@ func (h *PublicHandler) NotFound(c *gin.Context) {
 	data := notFoundView("Page not found", "The page you requested does not exist or has moved.")
 	if settings, err := h.settings.Current(); err == nil && settings != nil {
 		data["PublicChrome"] = publicChrome(settings)
+		data["SEO"] = services.NoIndexWithBrand("Page not found", settings)
+		data["Theme"] = services.FrontendTheme(settings)
 	}
 	c.HTML(http.StatusNotFound, "public/not_found.html", data)
+}
+
+func csrfTokenOrEmpty(sessions *session.Manager, c *gin.Context) string {
+	if sessions == nil {
+		return ""
+	}
+	token, err := sessions.CSRFToken(c)
+	if err != nil {
+		return ""
+	}
+	return token
 }

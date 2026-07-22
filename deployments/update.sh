@@ -14,7 +14,7 @@ DATA_DIR=/var/lib/ty2shorten
 BINARY=${APP_DIR}/ty2shorten
 BACKUP_DIR=${APP_DIR}/backups
 DB_PATH=${DATABASE_PATH:-${DATA_DIR}/ty2shorten.db}
-HEALTH_URL=${HEALTH_URL:-http://127.0.0.1:8080/health}
+HEALTH_URL=${HEALTH_URL:-http://127.0.0.1:8722/health}
 STAMP=$(date -u +%Y%m%d%H%M%S)
 
 if [[ -z "${NEW_BINARY}" || ! -f "${NEW_BINARY}" ]]; then

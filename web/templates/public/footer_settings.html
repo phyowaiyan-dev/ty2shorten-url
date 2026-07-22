@@ -36,14 +36,14 @@
       <div class="settings-card__grid">
         <label>
           <span>Footer brand text</span>
-          <input name="footer_brand_text" value="{{ .Form.FooterBrandText }}" maxlength="120" placeholder="ThaiLegalProtection">
+          <input name="footer_brand_text" value="{{ .Form.FooterBrandText }}" maxlength="120" placeholder="Phyo Wai Yan">
           <span class="input-meta"><small>Main footer heading. Use your product or company name.</small><small>Max 120 characters</small></span>
           {{ with index .FieldErrors "footer_brand_text" }}<small class="field-error">{{ . }}</small>{{ end }}
         </label>
 
         <label>
           <span>Copyright text</span>
-          <input name="copyright_text" value="{{ .Form.CopyrightText }}" placeholder="Copyright 2026 ThaiLegalProtection">
+          <input name="copyright_text" value="{{ .Form.CopyrightText }}" placeholder="Copyright 2026 Phyo Wai Yan">
           <span class="input-meta"><small>Shown in the bottom row. Include year and owner name.</small></span>
         </label>
 
@@ -78,23 +78,10 @@
       </div>
     </section>
 
-    <section class="settings-card" aria-labelledby="footer-credit-title">
-      <div class="settings-card__header">
-        <div>
-          <span class="dashboard-section-label">Protected credit</span>
-          <h2 id="footer-credit-title">Powered-by link</h2>
-        </div>
-      </div>
-      <p class="footer-credit-note">
-        The public footer always includes
-        <a href="https://phyowaiyan.com/" rel="noopener noreferrer" target="_blank">Powered-by Phyo Wai Yan</a>.
-      </p>
-    </section>
-
     <div class="settings-actions">
       <div>
         <strong>Footer content appears on the public landing page</strong>
-        <span>Legal links are managed by the Legal Content page, and the powered-by credit is fixed in the application.</span>
+        <span>Legal links are managed by the Legal Content page.</span>
       </div>
       <button class="primary-button" type="submit">Save footer</button>
     </div>

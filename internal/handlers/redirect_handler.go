@@ -26,6 +26,8 @@ func (h *RedirectHandler) Android(c *gin.Context) {
 		return
 	}
 
+	c.Set("analytics_route_type", "android")
+	c.Set("analytics_destination_platform", "android")
 	c.Redirect(http.StatusTemporaryRedirect, destination)
 }
 
@@ -37,12 +39,24 @@ func (h *RedirectHandler) Apple(c *gin.Context) {
 		return
 	}
 
+	c.Set("analytics_route_type", "apple")
+	c.Set("analytics_destination_platform", "apple")
 	c.Redirect(http.StatusTemporaryRedirect, destination)
 }
 
 // Get redirects mobile devices to the matching app-store route.
 func (h *RedirectHandler) Get(c *gin.Context) {
-	c.Redirect(http.StatusTemporaryRedirect, services.DeviceTarget(c.GetHeader("User-Agent")))
+	target := services.DeviceTarget(c.GetHeader("User-Agent"))
+	c.Set("analytics_route_type", "auto_detect")
+	switch target {
+	case "/android":
+		c.Set("analytics_destination_platform", "android")
+	case "/apple":
+		c.Set("analytics_destination_platform", "apple")
+	default:
+		c.Set("analytics_destination_platform", "desktop")
+	}
+	c.Redirect(http.StatusTemporaryRedirect, target)
 }
 
 // ShortLink redirects an active custom short link.
@@ -57,6 +71,10 @@ func (h *RedirectHandler) ShortLink(c *gin.Context) {
 		return
 	}
 
+	c.Set("analytics_route_type", "short_link")
+	c.Set("analytics_destination_platform", "custom")
+	c.Set("analytics_short_link_slug", link.Slug)
+	c.Set("analytics_short_link_id", link.ID)
 	c.Redirect(http.StatusTemporaryRedirect, link.Destination)
 }
 

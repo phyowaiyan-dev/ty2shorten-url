@@ -34,6 +34,7 @@ type RouteDependencies struct {
 	Dashboard    *services.DashboardService
 	Redirects    *services.RedirectService
 	SEO          *services.SEOService
+	Analytics    *services.AnalyticsService
 	Sessions     *session.Manager
 	CSRFHandler  gin.HandlerFunc
 	AuthHandler  gin.HandlerFunc
@@ -78,10 +79,10 @@ func RegisterBootstrapRoutes(router *gin.Engine, deps BootstrapRouteDependencies
 
 // RegisterRoutes attaches application routes to the router.
 func RegisterRoutes(router *gin.Engine, deps RouteDependencies) {
-	publicHandler := handlers.NewPublicHandler(deps.DB, deps.SettingsRepo, deps.SEO, deps.Logger, deps.Version, deps.Commit, deps.BuildTime)
+	publicHandler := handlers.NewPublicHandler(deps.DB, deps.SettingsRepo, deps.SEO, deps.Analytics, deps.Sessions, deps.Logger, deps.Version, deps.Commit, deps.BuildTime)
 	setupHandler := handlers.NewSetupHandler(deps.Setup, deps.Sessions)
-	authHandler := handlers.NewAuthHandler(deps.Auth, deps.Sessions)
-	adminHandler := handlers.NewAdminHandler(deps.Dashboard, deps.Settings, deps.Links, deps.Account, deps.Audit, deps.Media, deps.Sessions)
+	authHandler := handlers.NewAuthHandler(deps.Auth, deps.SettingsRepo, deps.Sessions)
+	adminHandler := handlers.NewAdminHandler(deps.Dashboard, deps.Settings, deps.Links, deps.Account, deps.Audit, deps.Media, deps.Analytics, deps.Sessions)
 	redirectHandler := handlers.NewRedirectHandler(deps.Redirects)
 	seoHandler := handlers.NewSEOHandler(deps.SEO)
 	mediaHandler := handlers.NewMediaHandler(deps.Media)
@@ -121,6 +122,12 @@ func RegisterRoutes(router *gin.Engine, deps RouteDependencies) {
 	router.GET("/admin/about", deps.AuthHandler, adminHandler.About)
 	router.GET("/admin/audit-logs", deps.AuthHandler, adminHandler.AuditLogs)
 	router.GET("/admin/audit-logs/:id", deps.AuthHandler, adminHandler.AuditLogDetail)
+	router.GET("/admin/analytics", deps.AuthHandler, adminHandler.Analytics)
+	router.GET("/admin/analytics/export", deps.AuthHandler, adminHandler.ExportAnalytics)
+	router.GET("/admin/analytics/sessions/:session_id", deps.AuthHandler, adminHandler.AnalyticsSessionDetail)
+	router.POST("/admin/analytics/cleanup", deps.AuthHandler, deps.CSRFHandler, adminHandler.CleanupAnalytics)
+	router.GET("/admin/settings/analytics", deps.AuthHandler, adminHandler.AnalyticsSettings)
+	router.POST("/admin/settings/analytics", deps.AuthHandler, deps.CSRFHandler, adminHandler.UpdateAnalyticsSettings)
 	router.GET("/android", redirectHandler.Android)
 	router.GET("/apple", redirectHandler.Apple)
 	router.GET("/get", redirectHandler.Get)

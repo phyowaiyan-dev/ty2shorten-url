@@ -56,14 +56,22 @@ func TestFooterSettingsRemovesProtectedFields(t *testing.T) {
 		"Footer visibility",
 		"Public text content",
 		"Visitor help details",
-		"Protected credit",
-		"Powered-by Phyo Wai Yan",
 	} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("footer settings missing marker %q: %s", want, body)
 		}
 	}
-	for _, removed := range []string{"Privacy Policy URL", "Terms URL", "privacy_policy_url", "terms_url", "Powered-by text", "powered_by_text"} {
+	for _, removed := range []string{
+		"Privacy Policy URL",
+		"Terms URL",
+		"privacy_policy_url",
+		"terms_url",
+		"Powered-by text",
+		"powered_by_text",
+		"Protected credit",
+		"Powered-by link",
+		"Powered-by Phyo Wai Yan",
+	} {
 		if strings.Contains(body, removed) {
 			t.Fatalf("footer settings still expose protected field %q: %s", removed, body)
 		}
