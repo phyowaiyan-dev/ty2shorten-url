@@ -496,7 +496,7 @@
   }
 
   .analytics-controls {
-    @apply rounded-lg border border-slate-200 bg-white shadow-sm;
+    @apply mt-6 rounded-lg border border-slate-200 bg-white shadow-sm;
   }
 
   .analytics-controls[open] {
