@@ -663,6 +663,18 @@
     @apply rounded bg-slate-100 px-2 py-1 text-xs text-slate-700;
   }
 
+  .analytics-pagination {
+    @apply mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 text-sm font-semibold text-slate-600 md:flex-row md:items-center md:justify-between;
+  }
+
+  .analytics-pagination__actions {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .button-link.is-disabled {
+    @apply pointer-events-none cursor-not-allowed opacity-50;
+  }
+
   .analytics-timeline {
     @apply mt-5 grid gap-3;
   }

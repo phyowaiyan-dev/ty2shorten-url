@@ -22,6 +22,7 @@ type AnalyticsRangeFilter struct {
 	To          time.Time
 	ExcludeBots bool
 	Limit       int
+	Offset      int
 }
 
 // AnalyticsSummary contains dashboard totals.
@@ -205,8 +206,12 @@ func (r *AnalyticsRepository) RecentRedirectEvents(filter AnalyticsRangeFilter) 
 	if limit <= 0 || limit > 100 {
 		limit = 25
 	}
+	offset := filter.Offset
+	if offset < 0 {
+		offset = 0
+	}
 	var events []models.RedirectEvent
-	query := r.db.Where("occurred_at >= ? AND occurred_at < ?", filter.From, filter.To).Order("occurred_at DESC").Limit(limit)
+	query := r.db.Where("occurred_at >= ? AND occurred_at < ?", filter.From, filter.To).Order("occurred_at DESC").Limit(limit).Offset(offset)
 	if filter.ExcludeBots {
 		query = query.Where("is_bot = ?", false)
 	}
@@ -214,6 +219,19 @@ func (r *AnalyticsRepository) RecentRedirectEvents(filter AnalyticsRangeFilter) 
 		return nil, fmt.Errorf("list recent redirect events: %w", err)
 	}
 	return events, nil
+}
+
+// CountRedirectEvents returns the number of redirect rows matching a dashboard range.
+func (r *AnalyticsRepository) CountRedirectEvents(filter AnalyticsRangeFilter) (int64, error) {
+	var total int64
+	query := r.db.Model(&models.RedirectEvent{}).Where("occurred_at >= ? AND occurred_at < ?", filter.From, filter.To)
+	if filter.ExcludeBots {
+		query = query.Where("is_bot = ?", false)
+	}
+	if err := query.Count(&total).Error; err != nil {
+		return 0, fmt.Errorf("count redirect events: %w", err)
+	}
+	return total, nil
 }
 
 // FindSession returns one analytics session by opaque session ID.

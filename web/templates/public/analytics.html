@@ -119,6 +119,27 @@
         </tbody>
       </table>
     </div>
+    <div class="analytics-pagination" aria-label="Redirect log pagination">
+      {{ if .Analytics.RedirectPagination.Total }}
+      <span>Showing {{ .Analytics.RedirectPagination.FromItem }}-{{ .Analytics.RedirectPagination.ToItem }} of {{ .Analytics.RedirectPagination.Total }} redirects</span>
+      <span>Page {{ .Analytics.RedirectPagination.Page }} of {{ .Analytics.RedirectPagination.TotalPages }}</span>
+      {{ else }}
+      <span>No redirects to paginate</span>
+      <span>Page 1 of 1</span>
+      {{ end }}
+      <div class="analytics-pagination__actions">
+        {{ if .Analytics.RedirectPagination.HasPrev }}
+        <a class="secondary-button button-link" href="{{ .Analytics.RedirectPagination.PrevURL }}">Previous</a>
+        {{ else }}
+        <span class="secondary-button button-link is-disabled" aria-disabled="true">Previous</span>
+        {{ end }}
+        {{ if .Analytics.RedirectPagination.HasNext }}
+        <a class="primary-button button-link" href="{{ .Analytics.RedirectPagination.NextURL }}">Next</a>
+        {{ else }}
+        <span class="primary-button button-link is-disabled" aria-disabled="true">Next</span>
+        {{ end }}
+      </div>
+    </div>
   </section>
 </section>
 {{ template "admin/shell-end" . }}

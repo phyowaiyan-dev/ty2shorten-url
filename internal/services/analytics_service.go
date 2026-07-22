@@ -28,6 +28,7 @@ const (
 	defaultAnalyticsRetentionDays = 90
 	defaultAnalyticsCookieDays    = 30
 	maxAnalyticsText              = 255
+	analyticsRedirectPageSize     = 10
 )
 
 // ErrAnalyticsSessionNotFound is returned when an analytics session cannot be found.
@@ -62,20 +63,35 @@ type AnalyticsSettingsForm struct {
 
 // AnalyticsOverview contains data rendered in the admin analytics dashboard.
 type AnalyticsOverview struct {
-	From              string
-	To                string
-	RangeLabel        string
-	Summary           repositories.AnalyticsSummary
-	DeviceRows        []repositories.AnalyticsBreakdownRow
-	OSRows            []repositories.AnalyticsBreakdownRow
-	BrowserRows       []repositories.AnalyticsBreakdownRow
-	ReferrerRows      []repositories.AnalyticsBreakdownRow
-	PlatformRows      []repositories.AnalyticsBreakdownRow
-	RecentRedirects   []AnalyticsRedirectRow
-	Settings          AnalyticsSettingsForm
-	RetentionDays     int
-	BotsExcluded      bool
-	AnalyticsDisabled bool
+	From               string
+	To                 string
+	RangeLabel         string
+	Summary            repositories.AnalyticsSummary
+	DeviceRows         []repositories.AnalyticsBreakdownRow
+	OSRows             []repositories.AnalyticsBreakdownRow
+	BrowserRows        []repositories.AnalyticsBreakdownRow
+	ReferrerRows       []repositories.AnalyticsBreakdownRow
+	PlatformRows       []repositories.AnalyticsBreakdownRow
+	RecentRedirects    []AnalyticsRedirectRow
+	RedirectPagination AnalyticsPagination
+	Settings           AnalyticsSettingsForm
+	RetentionDays      int
+	BotsExcluded       bool
+	AnalyticsDisabled  bool
+}
+
+// AnalyticsPagination describes a simple paged analytics table.
+type AnalyticsPagination struct {
+	Page       int
+	PageSize   int
+	Total      int64
+	TotalPages int
+	FromItem   int
+	ToItem     int
+	HasPrev    bool
+	HasNext    bool
+	PrevURL    string
+	NextURL    string
 }
 
 // AnalyticsRedirectRow is a dashboard-safe redirect event row.
@@ -324,7 +340,7 @@ func (s *AnalyticsService) Track(c *gin.Context, opts AnalyticsTrackOptions) {
 }
 
 // Overview returns the admin analytics dashboard data.
-func (s *AnalyticsService) Overview(from, to string) (AnalyticsOverview, error) {
+func (s *AnalyticsService) Overview(from, to, redirectPage string) (AnalyticsOverview, error) {
 	form, err := s.SettingsForm()
 	if err != nil {
 		return AnalyticsOverview{}, err
@@ -340,23 +356,41 @@ func (s *AnalyticsService) Overview(from, to string) (AnalyticsOverview, error) 
 	browsers, _ := s.analytics.Breakdown("redirect_events", "browser", filter)
 	referrers, _ := s.analytics.Breakdown("page_views", "referrer_host", filter)
 	platforms, _ := s.analytics.Breakdown("redirect_events", "destination_platform", filter)
-	recent, _ := s.analytics.RecentRedirectEvents(repositories.AnalyticsRangeFilter{From: start, To: end, ExcludeBots: false, Limit: 25})
+	page := parseAnalyticsPage(redirectPage)
+	redirectFilter := repositories.AnalyticsRangeFilter{
+		From:        start,
+		To:          end,
+		ExcludeBots: false,
+		Limit:       analyticsRedirectPageSize,
+		Offset:      (page - 1) * analyticsRedirectPageSize,
+	}
+	redirectTotal, err := s.analytics.CountRedirectEvents(redirectFilter)
+	if err != nil {
+		return AnalyticsOverview{}, err
+	}
+	totalPages := analyticsTotalPages(redirectTotal, analyticsRedirectPageSize)
+	if totalPages > 0 && page > totalPages {
+		page = totalPages
+		redirectFilter.Offset = (page - 1) * analyticsRedirectPageSize
+	}
+	recent, _ := s.analytics.RecentRedirectEvents(redirectFilter)
 	rangeLabel := analyticsRangeLabel(start, end, from, to)
 	return AnalyticsOverview{
-		From:              start.Format("2006-01-02"),
-		To:                end.AddDate(0, 0, -1).Format("2006-01-02"),
-		RangeLabel:        rangeLabel,
-		Summary:           summary,
-		DeviceRows:        devices,
-		OSRows:            oses,
-		BrowserRows:       browsers,
-		ReferrerRows:      referrers,
-		PlatformRows:      platforms,
-		RecentRedirects:   analyticsRedirectRows(recent),
-		Settings:          form,
-		RetentionDays:     form.DataRetentionDays,
-		BotsExcluded:      form.ExcludeBotsFromDashboard,
-		AnalyticsDisabled: !form.AnalyticsEnabled,
+		From:               start.Format("2006-01-02"),
+		To:                 end.AddDate(0, 0, -1).Format("2006-01-02"),
+		RangeLabel:         rangeLabel,
+		Summary:            summary,
+		DeviceRows:         devices,
+		OSRows:             oses,
+		BrowserRows:        browsers,
+		ReferrerRows:       referrers,
+		PlatformRows:       platforms,
+		RecentRedirects:    analyticsRedirectRows(recent),
+		RedirectPagination: analyticsPagination(page, analyticsRedirectPageSize, redirectTotal, start, end),
+		Settings:           form,
+		RetentionDays:      form.DataRetentionDays,
+		BotsExcluded:       form.ExcludeBotsFromDashboard,
+		AnalyticsDisabled:  !form.AnalyticsEnabled,
 	}, nil
 }
 
@@ -709,6 +743,70 @@ func analyticsRangeLabel(start, end time.Time, rawFrom, rawTo string) string {
 		return start.Local().Format("Jan 2") + " to " + endInclusive.Local().Format("Jan 2, 2006")
 	}
 	return start.Local().Format("Jan 2, 2006") + " to " + endInclusive.Local().Format("Jan 2, 2006")
+}
+
+func parseAnalyticsPage(raw string) int {
+	page, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil || page < 1 {
+		return 1
+	}
+	if page > 10000 {
+		return 10000
+	}
+	return page
+}
+
+func analyticsTotalPages(total int64, pageSize int) int {
+	if total <= 0 || pageSize <= 0 {
+		return 0
+	}
+	return int((total + int64(pageSize) - 1) / int64(pageSize))
+}
+
+func analyticsPagination(page, pageSize int, total int64, start, end time.Time) AnalyticsPagination {
+	totalPages := analyticsTotalPages(total, pageSize)
+	if totalPages == 0 {
+		page = 1
+	}
+	if totalPages > 0 && page > totalPages {
+		page = totalPages
+	}
+	fromItem := 0
+	toItem := 0
+	if total > 0 {
+		fromItem = ((page - 1) * pageSize) + 1
+		toItem = page * pageSize
+		if toItem > int(total) {
+			toItem = int(total)
+		}
+	}
+	pagination := AnalyticsPagination{
+		Page:       page,
+		PageSize:   pageSize,
+		Total:      total,
+		TotalPages: totalPages,
+		FromItem:   fromItem,
+		ToItem:     toItem,
+		HasPrev:    page > 1,
+		HasNext:    totalPages > 0 && page < totalPages,
+	}
+	if pagination.HasPrev {
+		pagination.PrevURL = analyticsPageURL(start, end, page-1)
+	}
+	if pagination.HasNext {
+		pagination.NextURL = analyticsPageURL(start, end, page+1)
+	}
+	return pagination
+}
+
+func analyticsPageURL(start, end time.Time, page int) string {
+	values := url.Values{}
+	values.Set("from", start.Format("2006-01-02"))
+	values.Set("to", end.AddDate(0, 0, -1).Format("2006-01-02"))
+	if page > 1 {
+		values.Set("redirect_page", strconv.Itoa(page))
+	}
+	return "/admin/analytics?" + values.Encode() + "#recent-redirects-title"
 }
 
 // ValidateAnalyticsSettings validates analytics settings without executable values.

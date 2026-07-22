@@ -545,7 +545,7 @@ func (h *AdminHandler) AuditLogDetail(c *gin.Context) {
 
 // Analytics renders the administrator analytics dashboard.
 func (h *AdminHandler) Analytics(c *gin.Context) {
-	overview, err := h.analytics.Overview(c.Query("from"), c.Query("to"))
+	overview, err := h.analytics.Overview(c.Query("from"), c.Query("to"), c.Query("redirect_page"))
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "public/error.html", errorView("Analytics unavailable", "Analytics data could not be loaded."))
 		return

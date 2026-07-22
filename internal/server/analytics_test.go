@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"encoding/csv"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -198,6 +199,78 @@ func TestAdminAnalyticsDashboardAndExport(t *testing.T) {
 	}
 	if len(records) < 2 || records[0][0] != "occurred_at" || records[0][1] != "route_type" {
 		t.Fatalf("unexpected CSV records: %#v", records)
+	}
+}
+
+func TestAdminAnalyticsRedirectLogPagination(t *testing.T) {
+	app := newRouteTestApp(t)
+	seedConfiguredApp(t, app.db)
+	app.login(t)
+
+	now := time.Now()
+	session := models.VisitorSession{
+		SessionID:       "pagination-session-1234567890abcdef",
+		FirstSeenAt:     now,
+		LastSeenAt:      now,
+		StartedAt:       now,
+		DeviceType:      "desktop",
+		OperatingSystem: "macOS",
+		Browser:         "Safari",
+	}
+	if err := app.db.Create(&session).Error; err != nil {
+		t.Fatalf("seed session: %v", err)
+	}
+	for i := 0; i < 12; i++ {
+		platform := "android"
+		if i%2 == 1 {
+			platform = "apple"
+		}
+		occurredAt := now.Add(-time.Duration(i) * time.Minute)
+		event := models.RedirectEvent{
+			SessionID:           session.SessionID,
+			RequestID:           fmt.Sprintf("redirect-request-%02d", i),
+			RouteType:           platform,
+			SourcePath:          "/" + platform,
+			ShortLinkSlug:       fmt.Sprintf("redirect-%02d", i),
+			DestinationPlatform: platform,
+			RedirectStatus:      http.StatusTemporaryRedirect,
+			IPHash:              "1234567890abcdef1234567890abcdef",
+			IPNetwork:           "127.0.0.0/24",
+			DeviceType:          "desktop",
+			OperatingSystem:     "macOS",
+			Browser:             "Safari",
+			OccurredAt:          occurredAt,
+			CreatedAt:           occurredAt,
+		}
+		if err := app.db.Create(&event).Error; err != nil {
+			t.Fatalf("seed redirect %d: %v", i, err)
+		}
+	}
+
+	from := now.AddDate(0, 0, -1).Format("2006-01-02")
+	to := now.Format("2006-01-02")
+	recorder := app.do(t, http.MethodGet, "/admin/analytics?from="+from+"&to="+to, nil, nil)
+	assertStatus(t, recorder, http.StatusOK)
+	body := recorder.Body.String()
+	for _, want := range []string{"Showing 1-10 of 12 redirects", "Page 1 of 2", "redirect_page=2", "redirect-00"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("analytics page 1 missing marker %q: %s", want, body)
+		}
+	}
+	if strings.Contains(body, "redirect-10") {
+		t.Fatalf("analytics page 1 should not include page 2 redirect rows: %s", body)
+	}
+
+	recorder = app.do(t, http.MethodGet, "/admin/analytics?from="+from+"&to="+to+"&redirect_page=2", nil, nil)
+	assertStatus(t, recorder, http.StatusOK)
+	body = recorder.Body.String()
+	for _, want := range []string{"Showing 11-12 of 12 redirects", "Page 2 of 2", "redirect-10", "redirect-11"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("analytics page 2 missing marker %q: %s", want, body)
+		}
+	}
+	if strings.Contains(body, "redirect-00") {
+		t.Fatalf("analytics page 2 should not include page 1 redirect rows: %s", body)
 	}
 }
 
